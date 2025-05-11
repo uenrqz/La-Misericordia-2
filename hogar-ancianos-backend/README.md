@@ -23,7 +23,7 @@ Backend para el sistema de gestión del Hogar de Ancianos "La Misericordia" en Q
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/hogar-ancianos-backend.git
+git clone https://github.com/uenrqz/La-Misericordia-2
 cd hogar-ancianos-backend
 ```
 
