@@ -1,0 +1,772 @@
+{
+	"info": {
+		"_postman_id": "28dfa7e5-f789-48a8-abd9-f7a0b36efa8c",
+		"name": "Hogar de Ancianos La Misericordia",
+		"description": "Colección de APIs para el sistema del Hogar de Ancianos La Misericordia",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticación",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@lamisericordia.org\",\n    \"password\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Iniciar sesión en el sistema"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Cerrar sesión en el sistema"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para autenticación y gestión de sesiones"
+		},
+		{
+			"name": "Residentes",
+			"item": [
+				{
+					"name": "Obtener Todos los Residentes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes"
+							]
+						},
+						"description": "Listar todos los residentes del hogar"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Residente por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1"
+							]
+						},
+						"description": "Obtener información detallada de un residente específico"
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Nuevo Residente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"María\",\n    \"apellido\": \"González\",\n    \"fecha_nacimiento\": \"1950-03-12\",\n    \"direccion_anterior\": \"Zona 1, Quetzaltenango\",\n    \"fecha_ingreso\": \"2025-05-01\",\n    \"estado_salud\": \"Estable, con diabetes tipo 2\",\n    \"medicamentos\": \"Metformina 850mg dos veces al día\",\n    \"alergias\": \"Ninguna\",\n    \"contacto_emergencia\": \"Roberto González (Hijo)\",\n    \"telefono_emergencia\": \"54789632\",\n    \"tipo_ingreso\": \"particular\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes"
+							]
+						},
+						"description": "Registrar un nuevo residente en el sistema"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Residente",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"estado_salud\": \"Estable, diabetes controlada\",\n    \"medicamentos\": \"Metformina 850mg dos veces al día, Glibenclamida 5mg\",\n    \"contacto_emergencia\": \"Roberto González (Hijo)\",\n    \"telefono_emergencia\": \"54789632\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1"
+							]
+						},
+						"description": "Actualizar información de un residente existente"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de residentes (ancianos)"
+		},
+		{
+			"name": "Signos Vitales",
+			"item": [
+				{
+					"name": "Obtener Signos Vitales",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/signos-vitales",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"signos-vitales"
+							]
+						},
+						"description": "Obtener historial de signos vitales de un residente"
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Signos Vitales",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"temperatura\": 36.7,\n    \"presion_arterial\": \"120/80\",\n    \"frecuencia_cardiaca\": 75,\n    \"frecuencia_respiratoria\": 18,\n    \"saturacion_oxigeno\": 97,\n    \"glucosa\": 110,\n    \"peso\": 68.5,\n    \"observaciones\": \"Paciente en buen estado general\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/signos-vitales",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"signos-vitales"
+							]
+						},
+						"description": "Registrar nuevos signos vitales para un residente"
+					},
+					"response": []
+				},
+				{
+					"name": "Estadísticas de Signos Vitales",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/signos-vitales/estadisticas?tipoEstadistica=temperatura&dias=7",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"signos-vitales",
+								"estadisticas"
+							],
+							"query": [
+								{
+									"key": "tipoEstadistica",
+									"value": "temperatura"
+								},
+								{
+									"key": "dias",
+									"value": "7"
+								}
+							]
+						},
+						"description": "Obtener estadísticas de signos vitales para gráficos"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para registro y consulta de signos vitales"
+		},
+		{
+			"name": "Órdenes Médicas",
+			"item": [
+				{
+					"name": "Obtener Órdenes Médicas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/ordenes?estado=activo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"ordenes"
+							],
+							"query": [
+								{
+									"key": "estado",
+									"value": "activo"
+								}
+							]
+						},
+						"description": "Listar las órdenes médicas de un residente"
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Orden Médica",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"descripcion\": \"Tratamiento para HTA\",\n    \"indicaciones\": \"Mantener registro diario de presión arterial. Dieta baja en sodio.\",\n    \"fecha_vencimiento\": \"2025-06-11\",\n    \"medicamentos\": [\n        {\n            \"medicamento_id\": 5,\n            \"dosis\": \"10mg\",\n            \"frecuencia\": \"cada 12 horas\",\n            \"hora_administracion\": \"8:00,20:00\",\n            \"via_administracion\": \"oral\",\n            \"fecha_inicio\": \"2025-05-11\",\n            \"fecha_fin\": \"2025-06-11\",\n            \"observaciones\": \"Tomar después de alimentos\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/ordenes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"ordenes"
+							]
+						},
+						"description": "Crear una nueva orden médica con medicamentos asociados"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Orden Médica",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/ordenes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"ordenes",
+								"1"
+							]
+						},
+						"description": "Ver detalles específicos de una orden médica"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Orden Médica",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"estado\": \"inactivo\",\n    \"indicaciones\": \"Orden suspendida por cambio de tratamiento\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/ordenes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"ordenes",
+								"1"
+							]
+						},
+						"description": "Actualizar una orden médica (ej: marcarla como inactiva)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de órdenes médicas y medicamentos"
+		},
+		{
+			"name": "Evoluciones",
+			"item": [
+				{
+					"name": "Obtener Evoluciones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/evoluciones?fechaInicio=2025-05-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"evoluciones"
+							],
+							"query": [
+								{
+									"key": "fechaInicio",
+									"value": "2025-05-01"
+								}
+							]
+						},
+						"description": "Obtener historial de evoluciones de un residente"
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Evolución",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"descripcion\": \"Paciente muestra mejoría en control de presión arterial. Valores estables alrededor de 120/80.\",\n    \"tipo_evolucion\": \"seguimiento\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/evoluciones",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"evoluciones"
+							]
+						},
+						"description": "Registrar una nueva evolución para un residente"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Evolución",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"descripcion\": \"Paciente muestra mejoría en control de presión arterial. Valores estables alrededor de 120/80. Se recomienda mantener misma dosis de medicamentos.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/residentes/1/evoluciones/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"residentes",
+								"1",
+								"evoluciones",
+								"1"
+							]
+						},
+						"description": "Actualizar una evolución existente (solo mismo día)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para seguimiento de evolución de residentes"
+		},
+		{
+			"name": "Donaciones",
+			"item": [
+				{
+					"name": "Listar Donaciones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/donaciones?tipoDonacion=monetaria&fechaInicio=2025-01-01&fechaFin=2025-05-11",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"donaciones"
+							],
+							"query": [
+								{
+									"key": "tipoDonacion",
+									"value": "monetaria"
+								},
+								{
+									"key": "fechaInicio",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "fechaFin",
+									"value": "2025-05-11"
+								}
+							]
+						},
+						"description": "Listar donaciones con filtros"
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Donación Monetaria",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fecha_donacion\": \"2025-05-11\",\n    \"tipo_donacion\": \"monetaria\",\n    \"monto\": 2500,\n    \"descripcion\": \"Donación de recaudación de evento benéfico\",\n    \"donante_nombre\": \"Fundación Ayuda y Esperanza\",\n    \"donante_nit\": \"45678912\",\n    \"donante_direccion\": \"16 Avenida 5-21 Zona 10\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/donaciones",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"donaciones"
+							]
+						},
+						"description": "Registrar una nueva donación monetaria"
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Donación en Especie",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fecha_donacion\": \"2025-05-11\",\n    \"tipo_donacion\": \"especie\",\n    \"descripcion\": \"Donación de ropa y artículos varios\",\n    \"donante_nombre\": \"Grupo Scout Quetzaltenango\",\n    \"articulos\": [\n        {\n            \"nombre\": \"Suéter de lana\",\n            \"descripcion\": \"Talla L, color azul\",\n            \"precio\": 75,\n            \"estado\": \"disponible\"\n        },\n        {\n            \"nombre\": \"Zapatos ortopédicos\",\n            \"descripcion\": \"Talla 42, nuevos\",\n            \"precio\": 150,\n            \"estado\": \"disponible\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/donaciones",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"donaciones"
+							]
+						},
+						"description": "Registrar una donación en especie con artículos"
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Informe SAT",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/donaciones/informe-sat?fechaInicio=2025-01-01&fechaFin=2025-05-11",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"donaciones",
+								"informe-sat"
+							],
+							"query": [
+								{
+									"key": "fechaInicio",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "fechaFin",
+									"value": "2025-05-11"
+								}
+							]
+						},
+						"description": "Generar informe de donaciones para SAT"
+					},
+					"response": []
+				},
+				{
+					"name": "Marcar Donaciones con Recibo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"donacionIds\": [1, 2, 3],\n    \"numeroReciboBase\": \"SAT-2025-0125\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/donaciones/marcar-recibos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"donaciones",
+								"marcar-recibos"
+							]
+						},
+						"description": "Marcar múltiples donaciones como con recibo generado"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de donaciones y recibos"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

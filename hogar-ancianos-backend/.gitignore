@@ -1,0 +1,36 @@
+# Dependencias de Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Variables de entorno
+.env
+
+# Directorio de distribución
+/dist
+/build
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de logs
+logs/
+*.log
+
+# Directorio de cobertura
+coverage/
+
+# Configuraciones de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos temporales
+tmp/
+temp/
+
+# Cache de ESLint
+.eslintcache

@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: hogar_user
+      POSTGRES_PASSWORD: securepass
+      POSTGRES_DB: hogar_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data:delegated
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'     # Limita a medio núcleo de CPU
+          memory: 512M     # Limita a 512MB de RAM
+        reservations:
+          cpus: '0.25'     # Reserva un cuarto de núcleo
+          memory: 256M     # Reserva 256MB de RAM
+volumes:
+  pgdata:
