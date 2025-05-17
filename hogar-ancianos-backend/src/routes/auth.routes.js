@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
+const { authenticate } = require('../middlewares/auth.middleware');
 
 /**
  * @route   GET /api/auth/sout
@@ -22,5 +23,19 @@ router.get('/sout/callback', authController.soutCallback);
  * @access  Public
  */
 router.post('/login', authController.login);
+
+/**
+ * @route   GET /api/auth/validate
+ * @desc    Validar el token JWT (utilizado por el BFF)
+ * @access  Private
+ */
+router.get('/validate', authenticate(), authController.validateToken);
+
+/**
+ * @route   POST /api/auth/refresh
+ * @desc    Refrescar el token JWT (utilizado por el BFF)
+ * @access  Private
+ */
+router.post('/refresh', authenticate(), authController.refreshToken);
 
 module.exports = router;

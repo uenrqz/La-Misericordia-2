@@ -1,5 +1,6 @@
 const axios = require('axios');
 const db = require('../config/db');
+const bcrypt = require('bcryptjs');
 const soutConfig = require('../config/sout');
 const { generateToken } = require('../middlewares/auth.middleware');
 
@@ -97,10 +98,10 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
     }
 
-    // Verificar credenciales con pgcrypto
+    // Obtener usuario por nombre de usuario
     const { rows } = await db.query(
-      'SELECT * FROM usuarios WHERE username = $1 AND password = crypt($2, password)',
-      [username, password]
+      'SELECT * FROM usuarios WHERE username = $1',
+      [username]
     );
 
     if (rows.length === 0) {
@@ -108,6 +109,26 @@ exports.login = async (req, res) => {
     }
 
     const userData = rows[0];
+    
+    // Verificar la contraseña con bcrypt
+    let passwordIsValid = false;
+    
+    if (userData.password.startsWith('$2a$')) {
+      // Formato bcrypt
+      passwordIsValid = bcrypt.compareSync(password, userData.password);
+    } else {
+      // Formato pgcrypto (mantener compatibilidad con usuarios existentes)
+      const cryptResult = await db.query(
+        'SELECT (password = crypt($1, password)) as is_valid FROM usuarios WHERE id = $2',
+        [password, userData.id]
+      );
+      passwordIsValid = cryptResult.rows[0]?.is_valid || false;
+    }
+    
+    if (!passwordIsValid) {
+      return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+
     const token = generateToken(userData);
 
     res.json({
@@ -125,6 +146,63 @@ exports.login = async (req, res) => {
     console.error('Error en login:', error);
     res.status(500).json({ 
       message: 'Error en el servidor durante la autenticación',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Validar token JWT
+ * @param {Object} req - Request Express
+ * @param {Object} res - Response Express
+ */
+exports.validateToken = (req, res) => {
+  try {
+    // Si llega a este punto, el middleware ya verificó el token
+    // Solo necesitamos devolver una respuesta exitosa
+    res.status(200).json({
+      valid: true,
+      message: 'Token válido',
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        rol: req.user.rol
+      }
+    });
+  } catch (error) {
+    console.error('Error al validar token:', error);
+    res.status(401).json({
+      valid: false,
+      message: 'Error al validar token',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Refrescar token JWT
+ * @param {Object} req - Request Express
+ * @param {Object} res - Response Express
+ */
+exports.refreshToken = (req, res) => {
+  try {
+    // El middleware ya verificó que el token es válido
+    // Generar un nuevo token con la misma información pero nueva fecha de expiración
+    const newToken = generateToken(req.user);
+    
+    res.status(200).json({
+      token: newToken,
+      message: 'Token actualizado correctamente',
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        rol: req.user.rol
+      }
+    });
+  } catch (error) {
+    console.error('Error al refrescar token:', error);
+    res.status(500).json({
+      message: 'Error al refrescar token',
       error: error.message
     });
   }

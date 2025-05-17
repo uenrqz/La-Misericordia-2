@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 require('dotenv').config();
 
 const app = express();
@@ -8,6 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload({
+  createParentPath: true,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB por archivo
+  abortOnLimit: true
+}));
 
 // Rutas
 app.use('/api/auth', require('./src/routes/auth.routes'));
@@ -22,6 +28,17 @@ app.use('/api/residentes', require('./src/routes/signos-vitales.routes'));
 app.use('/api/residentes', require('./src/routes/evoluciones.routes'));
 app.use('/api/residentes', require('./src/routes/ordenes-medicas.routes'));
 app.use('/api/donaciones', require('./src/routes/donaciones.routes'));
+
+// Ruta de salud para monitoreo
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    service: 'Backend - La Misericordia',
+    version: '1.0.0',
+    database: 'connected'
+  });
+});
 
 // Ruta principal
 app.get('/', (req, res) => {

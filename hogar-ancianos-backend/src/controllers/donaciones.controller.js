@@ -1,592 +1,519 @@
-const db = require('../config/db');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const { query } = require('../config/db');
+
+// Servicios
+const recibosDonacionService = require('../services/facturacion-sat.service');
+
+// Configuración del asilo actualizada con datos SAT
+const configuracionAsilo = {
+  nit: '65050223',
+  nombre: 'ASOCIACION FAMILIA VICENTINA DE LA CIUDAD DE QUETZALTENANGO',
+  nombreComercial: 'FAVIQ',
+  direccion: '14 AVENIDA 0-11 zona 1',
+  municipio: 'QUETZALTENANGO',
+  departamento: 'QUETZALTENANGO',
+  pais: 'GT'
+};
 
 /**
- * Obtener todas las donaciones con opciones de filtrado
+ * Obtiene todas las donaciones con paginación y filtrado
  */
-exports.getDonaciones = async (req, res) => {
+exports.obtenerDonaciones = async (req, res) => {
   try {
     const { 
-      fechaInicio, 
-      fechaFin, 
-      tipoDonacion, 
-      reciboGenerado,
-      donante,
-      limit = 50, 
-      offset = 0 
+      page = 1, 
+      limit = 10, 
+      tipo, 
+      estado, 
+      fechaInicio,
+      fechaFin,
+      donante
     } = req.query;
     
-    let query = `
-      SELECT d.*, u.nombre as usuario_registro_nombre
-      FROM donaciones d
-      JOIN usuarios u ON d.usuario_registro_id = u.id
-      WHERE 1=1
-    `;
-    
+    // Construir la consulta SQL base
+    let sqlQuery = 'SELECT * FROM donaciones WHERE 1=1';
     const params = [];
     let paramIndex = 1;
     
-    // Aplicar filtros
-    if (fechaInicio && fechaFin) {
-      query += ` AND d.fecha_donacion BETWEEN $${paramIndex++} AND $${paramIndex++}`;
-      params.push(fechaInicio, fechaFin);
-    } else if (fechaInicio) {
-      query += ` AND d.fecha_donacion >= $${paramIndex++}`;
-      params.push(fechaInicio);
-    } else if (fechaFin) {
-      query += ` AND d.fecha_donacion <= $${paramIndex++}`;
-      params.push(fechaFin);
+    // Aplicar filtros si se proporcionan
+    if (tipo) {
+      sqlQuery += ` AND tipo_donacion = $${paramIndex}`;
+      params.push(tipo);
+      paramIndex++;
     }
     
-    if (tipoDonacion) {
-      query += ` AND d.tipo_donacion = $${paramIndex++}`;
-      params.push(tipoDonacion);
-    }
-    
-    if (reciboGenerado !== undefined) {
-      query += ` AND d.recibo_generado = $${paramIndex++}`;
-      params.push(reciboGenerado === 'true' || reciboGenerado === true);
+    if (estado) {
+      sqlQuery += ` AND estado = $${paramIndex}`;
+      params.push(estado);
+      paramIndex++;
     }
     
     if (donante) {
-      query += ` AND d.donante_nombre ILIKE $${paramIndex++}`;
+      sqlQuery += ` AND donante_nombre ILIKE $${paramIndex}`;
       params.push(`%${donante}%`);
+      paramIndex++;
     }
     
-    // Ordenar por fecha más reciente primero
-    query += ` ORDER BY d.fecha_donacion DESC, d.id DESC`;
-    
-    // Aplicar paginación
-    query += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-    params.push(limit, offset);
-    
-    const result = await db.query(query, params);
-    
-    // Contar total de registros para paginación
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM donaciones d
-      WHERE 1=1
-    `;
-    
-    // Aplicar los mismos filtros al conteo
-    let countParams = [];
-    let countParamIndex = 1;
-    let countQueryWithFilters = countQuery;
-    
-    if (fechaInicio && fechaFin) {
-      countQueryWithFilters += ` AND d.fecha_donacion BETWEEN $${countParamIndex++} AND $${countParamIndex++}`;
-      countParams.push(fechaInicio, fechaFin);
-    } else if (fechaInicio) {
-      countQueryWithFilters += ` AND d.fecha_donacion >= $${countParamIndex++}`;
-      countParams.push(fechaInicio);
-    } else if (fechaFin) {
-      countQueryWithFilters += ` AND d.fecha_donacion <= $${countParamIndex++}`;
-      countParams.push(fechaFin);
+    // Filtro de fechas
+    if (fechaInicio) {
+      sqlQuery += ` AND fecha_donacion >= $${paramIndex}`;
+      params.push(fechaInicio);
+      paramIndex++;
     }
     
-    if (tipoDonacion) {
-      countQueryWithFilters += ` AND d.tipo_donacion = $${countParamIndex++}`;
-      countParams.push(tipoDonacion);
+    if (fechaFin) {
+      sqlQuery += ` AND fecha_donacion <= $${paramIndex}`;
+      params.push(fechaFin);
+      paramIndex++;
     }
     
-    if (reciboGenerado !== undefined) {
-      countQueryWithFilters += ` AND d.recibo_generado = $${countParamIndex++}`;
-      countParams.push(reciboGenerado === 'true' || reciboGenerado === true);
-    }
+    // Contar el total de registros que coinciden con el filtro
+    const countQuery = `SELECT COUNT(*) as total FROM (${sqlQuery}) AS filtered_donaciones`;
+    const totalResult = await query(countQuery, params);
+    const total = parseInt(totalResult.rows[0].total);
     
-    if (donante) {
-      countQueryWithFilters += ` AND d.donante_nombre ILIKE $${countParamIndex++}`;
-      countParams.push(`%${donante}%`);
-    }
+    // Agregar ordenamiento y paginación a la consulta original
+    sqlQuery += ` ORDER BY fecha_donacion DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(parseInt(limit));
+    params.push((page - 1) * parseInt(limit));
     
-    const countResult = await db.query(countQueryWithFilters, countParams);
-    const total = parseInt(countResult.rows[0].total);
+    // Ejecutar la consulta paginada
+    const result = await query(sqlQuery, params);
     
-    // Calcular totales por tipo de donación (solo monetarias)
-    const totalMonetariasQuery = `
-      SELECT SUM(monto) as total
-      FROM donaciones
-      WHERE tipo_donacion = 'monetaria'
-    `;
-    
-    const totalMonetariasResult = await db.query(totalMonetariasQuery);
-    const totalMonetarias = parseFloat(totalMonetariasResult.rows[0].total || 0);
-    
-    // Calcular totales por tipo de donación (monetarias) con los mismos filtros
-    let totalMonetariasFiltradoQuery = `
-      SELECT SUM(monto) as total
-      FROM donaciones
-      WHERE tipo_donacion = 'monetaria'
-    `;
-    
-    let totalMonetariasFiltradoParams = [];
-    let totalMonetariasFiltradoParamIndex = 1;
-    
-    if (fechaInicio && fechaFin) {
-      totalMonetariasFiltradoQuery += ` AND fecha_donacion BETWEEN $${totalMonetariasFiltradoParamIndex++} AND $${totalMonetariasFiltradoParamIndex++}`;
-      totalMonetariasFiltradoParams.push(fechaInicio, fechaFin);
-    } else if (fechaInicio) {
-      totalMonetariasFiltradoQuery += ` AND fecha_donacion >= $${totalMonetariasFiltradoParamIndex++}`;
-      totalMonetariasFiltradoParams.push(fechaInicio);
-    } else if (fechaFin) {
-      totalMonetariasFiltradoQuery += ` AND fecha_donacion <= $${totalMonetariasFiltradoParamIndex++}`;
-      totalMonetariasFiltradoParams.push(fechaFin);
-    }
-    
-    if (donante) {
-      totalMonetariasFiltradoQuery += ` AND donante_nombre ILIKE $${totalMonetariasFiltradoParamIndex++}`;
-      totalMonetariasFiltradoParams.push(`%${donante}%`);
-    }
-    
-    if (reciboGenerado !== undefined) {
-      totalMonetariasFiltradoQuery += ` AND recibo_generado = $${totalMonetariasFiltradoParamIndex++}`;
-      totalMonetariasFiltradoParams.push(reciboGenerado === 'true' || reciboGenerado === true);
-    }
-    
-    const totalMonetariasFiltradoResult = await db.query(totalMonetariasFiltradoQuery, totalMonetariasFiltradoParams);
-    const totalMonetariasFiltrado = parseFloat(totalMonetariasFiltradoResult.rows[0].total || 0);
-    
-    const response = {
-      donaciones: result.rows,
-      metadata: {
-        total,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        totalMonetarias,
-        totalMonetariasFiltrado
-      }
-    };
-    
-    res.json(response);
-  } catch (err) {
-    console.error('Error al obtener donaciones:', err);
-    res.status(500).json({ message: 'Error al obtener donaciones', error: err.message });
+    res.status(200).json({
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+      donaciones: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener donaciones:', error);
+    res.status(500).json({ mensaje: 'Error al obtener donaciones', error: error.message });
   }
 };
 
 /**
- * Obtener una donación específica por ID
+ * Obtiene una donación específica por su ID
  */
-exports.getDonacionById = async (req, res) => {
+exports.obtenerDonacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const query = `
-      SELECT d.*, u.nombre as usuario_registro_nombre
-      FROM donaciones d
-      JOIN usuarios u ON d.usuario_registro_id = u.id
-      WHERE d.id = $1
-    `;
-    
-    const result = await db.query(query, [id]);
+    const result = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: `Donación con ID ${id} no encontrada` });
+      return res.status(404).json({ mensaje: 'Donación no encontrada' });
     }
     
-    // Si es una donación en especie, buscar artículos asociados
-    if (result.rows[0].tipo_donacion === 'especie') {
-      const articulosQuery = `
-        SELECT *
-        FROM articulos_tienda
-        WHERE donacion_id = $1
-      `;
-      
-      const articulosResult = await db.query(articulosQuery, [id]);
-      result.rows[0].articulos = articulosResult.rows;
-    }
-    
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error al obtener donación:', err);
-    res.status(500).json({ message: 'Error al obtener donación', error: err.message });
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener donación:', error);
+    res.status(500).json({ mensaje: 'Error al obtener detalles de la donación', error: error.message });
   }
 };
 
 /**
- * Registrar nueva donación
+ * Crea una nueva donación
  */
-exports.createDonacion = async (req, res) => {
+exports.crearDonacion = async (req, res) => {
   try {
-    const { 
-      fecha_donacion = new Date(),
+    // Extraer datos del cuerpo de la solicitud
+    const {
       tipo_donacion,
       monto,
-      descripcion,
+      valor_estimado,
       donante_nombre,
       donante_nit,
       donante_direccion,
-      articulos // Para donaciones en especie
-    } = req.body;
-    
-    // Validar datos según tipo de donación
-    if (!tipo_donacion || !['monetaria', 'especie', 'servicios'].includes(tipo_donacion)) {
-      return res.status(400).json({ 
-        message: 'Tipo de donación no válido. Debe ser: monetaria, especie o servicios', 
-      });
-    }
-    
-    if (tipo_donacion === 'monetaria' && !monto) {
-      return res.status(400).json({ 
-        message: 'Para donaciones monetarias, el monto es obligatorio'
-      });
-    }
-    
-    if (tipo_donacion === 'especie' && (!articulos || articulos.length === 0)) {
-      return res.status(400).json({ 
-        message: 'Para donaciones en especie, debe especificar al menos un artículo'
-      });
-    }
-    
-    // Usar transacción para garantizar integridad
-    const client = await db.getClient();
-    
-    try {
-      await client.query('BEGIN');
-      
-      // Insertar donación
-      const donacionQuery = `
-        INSERT INTO donaciones (
-          fecha_donacion,
-          tipo_donacion,
-          monto,
-          descripcion,
-          donante_nombre,
-          donante_nit,
-          donante_direccion,
-          recibo_generado,
-          usuario_registro_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
-      `;
-      
-      const donacionValues = [
-        fecha_donacion,
-        tipo_donacion,
-        tipo_donacion === 'monetaria' ? monto : null,
-        descripcion || null,
-        donante_nombre || null,
-        donante_nit || null,
-        donante_direccion || null,
-        false, // recibo_generado
-        req.user.id
-      ];
-      
-      const donacionResult = await client.query(donacionQuery, donacionValues);
-      const donacionId = donacionResult.rows[0].id;
-      
-      // Si es donación en especie, insertar artículos
-      if (tipo_donacion === 'especie' && articulos && articulos.length > 0) {
-        for (const articulo of articulos) {
-          const articuloQuery = `
-            INSERT INTO articulos_tienda (
-              nombre,
-              descripcion,
-              precio,
-              estado,
-              fecha_ingreso,
-              donacion_id,
-              foto_url
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id
-          `;
-          
-          const articuloValues = [
-            articulo.nombre,
-            articulo.descripcion || null,
-            articulo.precio || 0,
-            articulo.estado || 'disponible',
-            new Date(),
-            donacionId,
-            articulo.foto_url || null
-          ];
-          
-          await client.query(articuloQuery, articuloValues);
-        }
-      }
-      
-      // Obtener datos del usuario que registró la donación
-      const usuarioQuery = `SELECT nombre FROM usuarios WHERE id = $1`;
-      const usuarioResult = await client.query(usuarioQuery, [req.user.id]);
-      
-      // Preparar respuesta completa
-      const donacionCompleta = {
-        ...donacionResult.rows[0],
-        usuario_registro_nombre: usuarioResult.rows[0].nombre,
-        articulos: articulos || []
-      };
-      
-      await client.query('COMMIT');
-      
-      res.status(201).json(donacionCompleta);
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
-  } catch (err) {
-    console.error('Error al crear donación:', err);
-    res.status(500).json({ message: 'Error al crear donación', error: err.message });
-  }
-};
-
-/**
- * Actualizar donación
- * Solo se permite actualizar si no tiene recibo generado
- */
-exports.updateDonacion = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { 
+      descripcion,
+      metodo_pago,
+      detalle_especie,
+      detalle_servicio,
+      notas,
       fecha_donacion,
-      descripcion,
-      donante_nombre,
-      donante_nit,
-      donante_direccion,
-      recibo_generado,
-      numero_recibo
+      estado,
+      generar_recibo
     } = req.body;
     
-    // Verificar si la donación existe
-    const checkDonacion = await db.query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    // Preparar variables para la consulta SQL
+    const campos = ['tipo_donacion', 'donante_nombre', 'fecha_donacion', 'estado'];
+    const valores = [tipo_donacion, donante_nombre, fecha_donacion ? new Date(fecha_donacion) : new Date(), estado || 'Pendiente'];
     
-    if (checkDonacion.rows.length === 0) {
-      return res.status(404).json({ message: `Donación con ID ${id} no encontrada` });
+    // Agregar campos opcionales si existen
+    if (donante_nit) {
+      campos.push('donante_nit');
+      valores.push(donante_nit);
     }
     
-    const donacionActual = checkDonacion.rows[0];
-    
-    // Solo administrativos y contadores pueden actualizar donaciones
-    if (
-      req.user.rol !== 'admin' && 
-      req.user.rol !== 'administrativo' && 
-      req.user.rol !== 'contador'
-    ) {
-      return res.status(403).json({ 
-        message: 'No tiene permisos para actualizar donaciones'
-      });
+    if (donante_direccion) {
+      campos.push('donante_direccion');
+      valores.push(donante_direccion);
     }
     
-    // Si ya tiene recibo generado, solo el contador puede actualizar el número de recibo
-    if (
-      donacionActual.recibo_generado && 
-      req.user.rol !== 'contador' && 
-      req.user.rol !== 'admin'
-    ) {
-      return res.status(403).json({ 
-        message: 'La donación ya tiene recibo generado. Solo contadores pueden actualizar'
-      });
+    if (descripcion) {
+      campos.push('descripcion');
+      valores.push(descripcion);
     }
     
-    // Preparar campos a actualizar
-    const fieldsToUpdate = [];
-    const values = [];
-    let paramIndex = 1;
-    
-    if (fecha_donacion) {
-      fieldsToUpdate.push(`fecha_donacion = $${paramIndex++}`);
-      values.push(fecha_donacion);
+    if (notas) {
+      campos.push('notas');
+      valores.push(notas);
     }
     
-    if (descripcion !== undefined) {
-      fieldsToUpdate.push(`descripcion = $${paramIndex++}`);
-      values.push(descripcion);
+    // Agregar campos específicos según el tipo de donación
+    if (tipo_donacion === 'monetaria') {
+      campos.push('monto');
+      valores.push(parseFloat(monto));
+      
+      campos.push('metodo_pago');
+      valores.push(metodo_pago);
+    } else {
+      campos.push('valor_estimado');
+      valores.push(parseFloat(valor_estimado));
+      
+      if (tipo_donacion === 'especie') {
+        campos.push('detalle_especie');
+        valores.push(detalle_especie);
+      } else if (tipo_donacion === 'servicios') {
+        campos.push('detalle_servicio');
+        valores.push(detalle_servicio);
+      }
     }
     
-    if (donante_nombre !== undefined) {
-      fieldsToUpdate.push(`donante_nombre = $${paramIndex++}`);
-      values.push(donante_nombre);
-    }
-    
-    if (donante_nit !== undefined) {
-      fieldsToUpdate.push(`donante_nit = $${paramIndex++}`);
-      values.push(donante_nit);
-    }
-    
-    if (donante_direccion !== undefined) {
-      fieldsToUpdate.push(`donante_direccion = $${paramIndex++}`);
-      values.push(donante_direccion);
-    }
-    
-    // Solo contador puede cambiar estado de recibo_generado y número de recibo
-    if (req.user.rol === 'contador' || req.user.rol === 'admin') {
-      if (recibo_generado !== undefined) {
-        fieldsToUpdate.push(`recibo_generado = $${paramIndex++}`);
-        values.push(recibo_generado);
+    // Si hay un archivo de comprobante adjunto, guardarlo
+    let rutaComprobante = null;
+    if (req.files && req.files.comprobante) {
+      const comprobante = req.files.comprobante;
+      const extensionArchivo = path.extname(comprobante.name).toLowerCase();
+      const nombreArchivo = `${uuidv4()}${extensionArchivo}`;
+      const rutaArchivo = path.join(__dirname, '../../uploads/comprobantes', nombreArchivo);
+      
+      // Crear directorio si no existe
+      const directorioDestino = path.dirname(rutaArchivo);
+      if (!fs.existsSync(directorioDestino)) {
+        fs.mkdirSync(directorioDestino, { recursive: true });
       }
       
-      if (numero_recibo !== undefined) {
-        fieldsToUpdate.push(`numero_recibo = $${paramIndex++}`);
-        values.push(numero_recibo);
-      }
+      // Mover el archivo subido al destino
+      await comprobante.mv(rutaArchivo);
+      
+      // Guardar la ruta relativa del archivo
+      rutaComprobante = `/uploads/comprobantes/${nombreArchivo}`;
+      campos.push('comprobante');
+      valores.push(rutaComprobante);
     }
     
-    if (fieldsToUpdate.length === 0) {
-      return res.status(400).json({ message: 'No se proporcionaron campos para actualizar' });
-    }
+    // Crear placeholders para la consulta SQL ($1, $2, ...)
+    const placeholders = valores.map((_, index) => `$${index + 1}`).join(', ');
     
-    // Añadir ID al final de los valores
-    values.push(id);
-    
-    const query = `
-      UPDATE donaciones 
-      SET ${fieldsToUpdate.join(', ')} 
-      WHERE id = $${paramIndex} 
+    // Construir la consulta SQL con RETURNING para obtener el registro insertado
+    const sqlQuery = `
+      INSERT INTO donaciones (${campos.join(', ')})
+      VALUES (${placeholders})
       RETURNING *
     `;
     
-    const result = await db.query(query, values);
+    // Ejecutar la consulta
+    const result = await query(sqlQuery, valores);
+    const nuevaDonacion = result.rows[0];
     
-    // Obtener datos del usuario que registró la donación
-    const usuarioQuery = `SELECT nombre FROM usuarios WHERE id = $1`;
-    const usuarioResult = await db.query(usuarioQuery, [result.rows[0].usuario_registro_id]);
+    // Si se solicita generar recibo de donación
+    if (generar_recibo === 'true' || generar_recibo === true) {
+      await generarReciboDonacion(nuevaDonacion, res);
+    } else {
+      // Responder con la donación creada
+      res.status(201).json(nuevaDonacion);
+    }
     
-    // Preparar respuesta completa
-    const donacionActualizada = {
-      ...result.rows[0],
-      usuario_registro_nombre: usuarioResult.rows[0].nombre
-    };
-    
-    res.json(donacionActualizada);
-  } catch (err) {
-    console.error('Error al actualizar donación:', err);
-    res.status(500).json({ message: 'Error al actualizar donación', error: err.message });
+  } catch (error) {
+    console.error('Error al crear donación:', error);
+    res.status(500).json({ mensaje: 'Error al registrar la donación', error: error.message });
   }
 };
 
 /**
- * Generar informe de donaciones para SAT
- * Solo para contadores y admin
+ * Actualiza una donación existente
  */
-exports.generarInformeSAT = async (req, res) => {
+exports.actualizarDonacion = async (req, res) => {
   try {
-    // Verificar permisos
-    if (req.user.rol !== 'contador' && req.user.rol !== 'admin') {
-      return res.status(403).json({ 
-        message: 'Solo contadores pueden generar informes para SAT'
-      });
+    const { id } = req.params;
+    const datosActualizados = { ...req.body };
+    
+    // Buscar la donación existente
+    const donacionResult = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    
+    if (donacionResult.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Donación no encontrada' });
     }
     
-    const { fechaInicio, fechaFin } = req.query;
+    const donacionExistente = donacionResult.rows[0];
     
-    // Validar fechas
-    if (!fechaInicio || !fechaFin) {
-      return res.status(400).json({ 
-        message: 'Debe proporcionar fechas de inicio y fin para el informe'
-      });
-    }
+    // Preparar los campos a actualizar
+    const actualizaciones = [];
+    const valores = [];
+    let paramIndex = 1;
     
-    // Obtener donaciones sin recibo generado
-    const query = `
-      SELECT *
-      FROM donaciones
-      WHERE fecha_donacion BETWEEN $1 AND $2
-        AND tipo_donacion = 'monetaria'
-        AND recibo_generado = false
-      ORDER BY fecha_donacion ASC
-    `;
-    
-    const result = await db.query(query, [fechaInicio, fechaFin]);
-    
-    // Calcular totales
-    let totalMonto = 0;
-    result.rows.forEach(donacion => {
-      totalMonto += parseFloat(donacion.monto || 0);
-    });
-    
-    // Generar informe
-    const informe = {
-      periodo: {
-        fechaInicio,
-        fechaFin
-      },
-      donaciones: result.rows,
-      totales: {
-        cantidadDonaciones: result.rows.length,
-        montoTotal: totalMonto
-      },
-      generadoPor: req.user.id,
-      fechaGeneracion: new Date()
-    };
-    
-    res.json(informe);
-  } catch (err) {
-    console.error('Error al generar informe SAT:', err);
-    res.status(500).json({ message: 'Error al generar informe SAT', error: err.message });
-  }
-};
-
-/**
- * Marcar múltiples donaciones como con recibo generado
- * Solo para contadores y admin
- */
-exports.marcarRecibosGenerados = async (req, res) => {
-  try {
-    // Verificar permisos
-    if (req.user.rol !== 'contador' && req.user.rol !== 'admin') {
-      return res.status(403).json({ 
-        message: 'Solo contadores pueden marcar recibos como generados'
-      });
-    }
-    
-    const { donacionIds, numeroReciboBase } = req.body;
-    
-    // Validar datos
-    if (!donacionIds || !Array.isArray(donacionIds) || donacionIds.length === 0) {
-      return res.status(400).json({ 
-        message: 'Debe proporcionar un array de IDs de donaciones'
-      });
-    }
-    
-    if (!numeroReciboBase) {
-      return res.status(400).json({ 
-        message: 'Debe proporcionar un número de recibo base'
-      });
-    }
-    
-    // Usar transacción para actualizar todas las donaciones
-    const client = await db.getClient();
-    
-    try {
-      await client.query('BEGIN');
+    // Recorrer los datos que se desean actualizar
+    for (const [campo, valor] of Object.entries(datosActualizados)) {
+      // Ignorar el campo generar_recibo que es solo para control
+      if (campo === 'generar_recibo') continue;
       
-      let donacionesActualizadas = [];
+      // Procesar campos específicos
+      if (campo === 'fecha_donacion' && valor) {
+        actualizaciones.push(`${campo} = $${paramIndex}`);
+        valores.push(new Date(valor));
+        paramIndex++;
+      } else if ((campo === 'monto' || campo === 'valor_estimado') && valor) {
+        actualizaciones.push(`${campo} = $${paramIndex}`);
+        valores.push(parseFloat(valor));
+        paramIndex++;
+      } else if (valor !== undefined) {
+        actualizaciones.push(`${campo} = $${paramIndex}`);
+        valores.push(valor);
+        paramIndex++;
+      }
+    }
+    
+    // Si hay un archivo de comprobante nuevo, procesarlo
+    if (req.files && req.files.comprobante) {
+      const comprobante = req.files.comprobante;
+      const extensionArchivo = path.extname(comprobante.name).toLowerCase();
+      const nombreArchivo = `${uuidv4()}${extensionArchivo}`;
+      const rutaArchivo = path.join(__dirname, '../../uploads/comprobantes', nombreArchivo);
       
-      // Actualizar cada donación
-      for (let i = 0; i < donacionIds.length; i++) {
-        const id = donacionIds[i];
-        const numeroRecibo = `${numeroReciboBase}-${i + 1}`;
-        
-        const updateQuery = `
-          UPDATE donaciones
-          SET recibo_generado = true,
-              numero_recibo = $1
-          WHERE id = $2
-          RETURNING *
-        `;
-        
-        const result = await client.query(updateQuery, [numeroRecibo, id]);
-        
-        if (result.rows.length > 0) {
-          donacionesActualizadas.push(result.rows[0]);
+      // Crear directorio si no existe
+      const directorioDestino = path.dirname(rutaArchivo);
+      if (!fs.existsSync(directorioDestino)) {
+        fs.mkdirSync(directorioDestino, { recursive: true });
+      }
+      
+      // Mover el archivo subido al destino
+      await comprobante.mv(rutaArchivo);
+      
+      // Eliminar archivo anterior si existe
+      if (donacionExistente.comprobante) {
+        const rutaAnterior = path.join(__dirname, '../..', donacionExistente.comprobante);
+        if (fs.existsSync(rutaAnterior)) {
+          fs.unlinkSync(rutaAnterior);
         }
       }
       
-      await client.query('COMMIT');
-      
-      res.json({ 
-        message: `${donacionesActualizadas.length} donaciones marcadas con recibo generado`,
-        donaciones: donacionesActualizadas
-      });
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
+      // Agregar la actualización del campo comprobante
+      actualizaciones.push(`comprobante = $${paramIndex}`);
+      valores.push(`/uploads/comprobantes/${nombreArchivo}`);
+      paramIndex++;
     }
-  } catch (err) {
-    console.error('Error al marcar recibos como generados:', err);
-    res.status(500).json({ message: 'Error al marcar recibos', error: err.message });
+    
+    // Agregar timestamp de actualización
+    actualizaciones.push(`updated_at = $${paramIndex}`);
+    valores.push(new Date());
+    paramIndex++;
+    
+    // Añadir el ID a los parámetros
+    valores.push(id);
+    
+    // Si no hay campos para actualizar, devolver la donación actual
+    if (actualizaciones.length === 0) {
+      return res.status(200).json(donacionExistente);
+    }
+    
+    // Construir y ejecutar la consulta SQL
+    const sqlQuery = `
+      UPDATE donaciones
+      SET ${actualizaciones.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+    
+    const result = await query(sqlQuery, valores);
+    const donacionActualizada = result.rows[0];
+    
+    // Si se solicita generar recibo de donación
+    if (datosActualizados.generar_recibo === 'true' || datosActualizados.generar_recibo === true) {
+      await generarReciboDonacion(donacionActualizada, res);
+    } else {
+      // Responder con la donación actualizada
+      res.status(200).json(donacionActualizada);
+    }
+    
+  } catch (error) {
+    console.error('Error al actualizar donación:', error);
+    res.status(500).json({ mensaje: 'Error al actualizar la donación', error: error.message });
   }
 };
+
+/**
+ * Elimina una donación
+ */
+exports.eliminarDonacion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar la donación
+    const donacionResult = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    
+    if (donacionResult.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Donación no encontrada' });
+    }
+    
+    const donacion = donacionResult.rows[0];
+    
+    // Si tiene recibo generado, no permitir eliminar
+    if (donacion.recibo_generado) {
+      return res.status(400).json({ 
+        mensaje: 'No se puede eliminar una donación con recibo generado',
+        detalle: 'Las donaciones con recibos de donación electrónicos no pueden ser eliminadas por normativas SAT'
+      });
+    }
+    
+    // Eliminar archivo de comprobante si existe
+    if (donacion.comprobante) {
+      const rutaArchivo = path.join(__dirname, '../..', donacion.comprobante);
+      if (fs.existsSync(rutaArchivo)) {
+        fs.unlinkSync(rutaArchivo);
+      }
+    }
+    
+    // Eliminar la donación
+    await query('DELETE FROM donaciones WHERE id = $1', [id]);
+    
+    res.status(200).json({ mensaje: 'Donación eliminada correctamente' });
+    
+  } catch (error) {
+    console.error('Error al eliminar donación:', error);
+    res.status(500).json({ mensaje: 'Error al eliminar la donación', error: error.message });
+  }
+};
+
+/**
+ * Genera recibo de donación para una donación existente
+ */
+exports.generarReciboDonacion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar la donación
+    const donacionResult = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    
+    if (donacionResult.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Donación no encontrada' });
+    }
+    
+    const donacion = donacionResult.rows[0];
+    
+    // Si ya tiene recibo generado, devolver los datos
+    if (donacion.recibo_generado) {
+      return res.status(200).json({
+        mensaje: 'La donación ya tiene un recibo generado',
+        recibo: {
+          serie: donacion.serie_recibo,
+          numero: donacion.numero_recibo,
+          uuid: donacion.uuid_recibo,
+          url_pdf: donacion.url_recibo
+        }
+      });
+    }
+    
+    await generarReciboDonacion(donacion, res);
+    
+  } catch (error) {
+    console.error('Error al generar recibo de donación:', error);
+    res.status(500).json({ mensaje: 'Error al generar recibo de donación', error: error.message });
+  }
+};
+
+/**
+ * Función auxiliar para generar recibo de donación
+ */
+async function generarReciboDonacion(donacion, res) {
+  try {
+    // Verificar datos requeridos para el recibo
+    if (!donacion.donante_nit) {
+      return res.status(400).json({ 
+        mensaje: 'Datos incompletos para generar recibo de donación',
+        detalle: 'Se requiere NIT del donante'
+      });
+    }
+    
+    if (!donacion.donante_direccion) {
+      return res.status(400).json({
+        mensaje: 'Datos incompletos para generar recibo de donación',
+        detalle: 'Se requiere dirección del donante'
+      });
+    }
+    
+    // Preparar datos para el recibo
+    const donacionData = {
+      donante: {
+        nit: donacion.donante_nit,
+        nombre: donacion.donante_nombre,
+        direccion: donacion.donante_direccion
+      },
+      monto: donacion.monto || 0,
+      valorEstimado: donacion.valor_estimado || 0,
+      descripcion: donacion.descripcion,
+      tipo: donacion.tipo_donacion.charAt(0).toUpperCase() + donacion.tipo_donacion.slice(1)
+    };
+    
+    // Llamar al servicio para generar el recibo
+    const reciboService = new recibosDonacionService();
+    const resultado = await reciboService.procesarReciboDonacion(donacionData);
+    
+    if (!resultado.success) {
+      return res.status(400).json({
+        mensaje: 'Error al generar el recibo de donación',
+        detalle: resultado.mensaje,
+        error: resultado.error
+      });
+    }
+    
+    // Actualizar la donación con los datos del recibo en PostgreSQL
+    const updateQuery = `
+      UPDATE donaciones
+      SET recibo_generado = true,
+          serie_recibo = $1,
+          numero_recibo = $2,
+          uuid_recibo = $3,
+          url_recibo = $4,
+          fecha_recibo = $5,
+          updated_at = NOW()
+      WHERE id = $6
+      RETURNING *
+    `;
+    
+    const updateResult = await query(updateQuery, [
+      resultado.recibo.serie,
+      resultado.recibo.numero,
+      resultado.recibo.uuid,
+      resultado.recibo.xml_url,
+      new Date(),
+      donacion.id
+    ]);
+    
+    const donacionActualizada = updateResult.rows[0];
+    
+    res.status(200).json({
+      mensaje: 'Recibo de donación generado correctamente',
+      recibo: {
+        serie: resultado.recibo.serie,
+        numero: resultado.recibo.numero,
+        uuid: resultado.recibo.uuid,
+        url_pdf: resultado.recibo.xml_url
+      },
+      donacion: donacionActualizada
+    });
+  } catch (error) {
+    console.error('Error en proceso de generación de recibo:', error);
+    
+    if (res) {
+      res.status(500).json({ 
+        mensaje: 'Error al generar recibo de donación', 
+        error: error.message
+      });
+    }
+    
+    throw error;
+  }
+}

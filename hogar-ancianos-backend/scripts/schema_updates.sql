@@ -82,21 +82,38 @@ CREATE TABLE IF NOT EXISTS evoluciones (
     orden_medica_id INTEGER REFERENCES ordenes_medicas(id)
 );
 
--- Crear tabla para donaciones
+-- Tabla para donaciones (migración desde MongoDB)
 CREATE TABLE IF NOT EXISTS donaciones (
     id SERIAL PRIMARY KEY,
-    fecha_donacion DATE NOT NULL DEFAULT CURRENT_DATE,
-    tipo_donacion VARCHAR(30) NOT NULL CHECK (tipo_donacion IN ('monetaria', 'especie', 'servicios')),
-    monto DECIMAL(10,2),
-    descripcion TEXT,
-    donante_nombre VARCHAR(100),
-    donante_nit VARCHAR(15),
+    tipo_donacion VARCHAR(50) NOT NULL CHECK (tipo_donacion IN ('monetaria', 'especie', 'servicios')),
+    monto NUMERIC(10, 2),
+    valor_estimado NUMERIC(10, 2),
+    donante_nombre VARCHAR(255) NOT NULL,
+    donante_nit VARCHAR(50),
     donante_direccion TEXT,
+    descripcion TEXT,
+    metodo_pago VARCHAR(50) CHECK (metodo_pago IN ('efectivo', 'cheque', 'transferencia', 'tarjeta', 'otro')),
+    detalle_especie TEXT,
+    detalle_servicio TEXT,
+    notas TEXT,
+    fecha_donacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    comprobante VARCHAR(255),
+    estado VARCHAR(50) DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'Procesada', 'Anulada')),
     recibo_generado BOOLEAN DEFAULT FALSE,
-    numero_recibo VARCHAR(30),
-    usuario_registro_id INTEGER NOT NULL REFERENCES usuarios(id),
-    fecha_registro TIMESTAMP NOT NULL DEFAULT NOW()
+    serie_recibo VARCHAR(50),
+    numero_recibo VARCHAR(50),
+    uuid_recibo VARCHAR(50),
+    url_recibo VARCHAR(255),
+    fecha_recibo TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Crear índice para búsquedas rápidas por tipo de donación
+CREATE INDEX IF NOT EXISTS idx_donaciones_tipo ON donaciones(tipo_donacion);
+
+-- Crear índice para búsquedas por fecha de donación
+CREATE INDEX IF NOT EXISTS idx_donaciones_fecha ON donaciones(fecha_donacion);
 
 -- Crear tabla para artículos de la tienda (yard sale)
 CREATE TABLE IF NOT EXISTS articulos_tienda (
