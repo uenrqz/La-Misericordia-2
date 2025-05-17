@@ -18,6 +18,89 @@ const configuracionAsilo = {
 };
 
 /**
+ * Inicia sesión con el servicio de SAT para facturación electrónica
+ * @param {Request} req - Objeto de solicitud
+ * @param {Response} res - Objeto de respuesta
+ */
+exports.iniciarSesionSAT = async (req, res) => {
+  try {
+    const { usuario, password, nit, certificadorNit } = req.body;
+    
+    if (!usuario || !password) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'El usuario y contraseña son obligatorios para iniciar sesión con SAT'
+      });
+    }
+    
+    const credenciales = {
+      user: usuario,
+      password: password,
+      nit: nit || configuracionAsilo.nit,
+      certificadorNit: certificadorNit || undefined
+    };
+    
+    const resultado = await recibosDonacionService.iniciarSesion(credenciales);
+    
+    if (resultado.success) {
+      return res.status(200).json(resultado);
+    } else {
+      return res.status(401).json(resultado);
+    }
+  } catch (error) {
+    console.error('Error al iniciar sesión con SAT:', error);
+    return res.status(500).json({
+      success: false,
+      mensaje: 'Error interno al intentar iniciar sesión con SAT',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Verifica el estado de la sesión con el servicio SAT
+ * @param {Request} req - Objeto de solicitud
+ * @param {Response} res - Objeto de respuesta
+ */
+exports.verificarSesionSAT = async (req, res) => {
+  try {
+    const estadoSesion = recibosDonacionService.verificarSesion();
+    
+    return res.status(200).json({
+      success: true,
+      estadoSesion
+    });
+  } catch (error) {
+    console.error('Error al verificar sesión con SAT:', error);
+    return res.status(500).json({
+      success: false,
+      mensaje: 'Error interno al verificar estado de sesión con SAT',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Cierra la sesión actual con el servicio SAT
+ * @param {Request} req - Objeto de solicitud
+ * @param {Response} res - Objeto de respuesta
+ */
+exports.cerrarSesionSAT = async (req, res) => {
+  try {
+    const resultado = recibosDonacionService.cerrarSesion();
+    
+    return res.status(200).json(resultado);
+  } catch (error) {
+    console.error('Error al cerrar sesión con SAT:', error);
+    return res.status(500).json({
+      success: false,
+      mensaje: 'Error interno al cerrar sesión con SAT',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Obtiene todas las donaciones con paginación y filtrado
  */
 exports.obtenerDonaciones = async (req, res) => {

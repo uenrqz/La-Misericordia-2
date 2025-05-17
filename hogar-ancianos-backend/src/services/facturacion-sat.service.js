@@ -63,6 +63,106 @@ class RecibosDonacionService {
   }
 
   /**
+   * Establece nuevas credenciales para la autenticación con SAT
+   * @param {Object} credenciales - Credenciales de acceso a SAT
+   * @param {string} credenciales.nit - NIT del emisor
+   * @param {string} credenciales.user - Usuario del emisor
+   * @param {string} credenciales.password - Contraseña del usuario
+   * @param {string} credenciales.certificadorNit - NIT del certificador
+   * @returns {boolean} - True si las credenciales se establecieron correctamente
+   */
+  setCredenciales(credenciales) {
+    if (!credenciales || !credenciales.user || !credenciales.password) {
+      throw new Error('Las credenciales proporcionadas son inválidas. Se requiere al menos usuario y contraseña.');
+    }
+    
+    this.credentials = {
+      ...this.credentials,
+      user: credenciales.user,
+      password: credenciales.password,
+      nit: credenciales.nit || this.credentials.nit,
+      certificadorNit: credenciales.certificadorNit || this.credentials.certificadorNit,
+      emisorNit: credenciales.emisorNit || this.credentials.emisorNit
+    };
+    
+    // Invalidamos el token actual para forzar una nueva autenticación
+    this.token = null;
+    this.tokenExpiration = null;
+    
+    return true;
+  }
+
+  /**
+   * Inicia sesión con el servicio de la SAT utilizando las credenciales proporcionadas
+   * @param {Object} credenciales - Credenciales para iniciar sesión
+   * @returns {Promise<Object>} - Resultado de la autenticación con información de sesión
+   */
+  async iniciarSesion(credenciales) {
+    try {
+      // Si se proporcionan credenciales, actualizamos las existentes
+      if (credenciales) {
+        this.setCredenciales(credenciales);
+      }
+      
+      // Verificamos que existan las credenciales mínimas necesarias
+      if (!this.credentials.user || !this.credentials.password) {
+        throw new Error('No se han configurado las credenciales de acceso a SAT. Por favor proporcione usuario y contraseña.');
+      }
+      
+      // Intentamos autenticar con el servicio
+      const token = await this.authenticate();
+      
+      // Si llegamos aquí, la autenticación fue exitosa
+      return {
+        success: true,
+        mensaje: 'Sesión iniciada correctamente con el servicio SAT',
+        sesion: {
+          token: token.substring(0, 10) + '...',  // Solo mostramos parte del token por seguridad
+          expiracion: this.tokenExpiration,
+          nit_emisor: this.credentials.emisorNit,
+          ambiente: this.env
+        }
+      };
+    } catch (error) {
+      console.error('Error al iniciar sesión con SAT:', error);
+      return {
+        success: false,
+        mensaje: 'Error al iniciar sesión con el servicio SAT',
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Verifica si hay una sesión activa con el servicio SAT
+   * @returns {Object} - Estado de la sesión
+   */
+  verificarSesion() {
+    const sesionActiva = this.token && this.tokenExpiration && new Date() < this.tokenExpiration;
+    
+    return {
+      sesionActiva,
+      expiracion: this.tokenExpiration || null,
+      tiempoRestante: sesionActiva ? Math.floor((this.tokenExpiration - new Date()) / (1000 * 60)) : 0, // minutos restantes
+      ambiente: this.env
+    };
+  }
+
+  /**
+   * Cierra la sesión actual con el servicio SAT
+   * @returns {Object} - Resultado del cierre de sesión
+   */
+  cerrarSesion() {
+    this.token = null;
+    this.tokenExpiration = null;
+    
+    return {
+      success: true,
+      mensaje: 'Sesión cerrada correctamente'
+    };
+  }
+
+  /**
    * Autenticación con el servicio de la SAT
    * @returns {Promise<string>} Token de acceso
    */
