@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { iniciarSesionSAT, verificarSesionSAT, cerrarSesionSAT } from '../../services/sat.service';
+import * as satService from '../../services/sat.service';
 
 // Componente para manejar la sesión de SAT
 const SesionSAT = ({ onSesionChange }) => {
@@ -35,7 +35,7 @@ const SesionSAT = ({ onSesionChange }) => {
   // Función para verificar el estado actual de la sesión
   const checkSesionStatus = async () => {
     try {
-      const response = await verificarSesionSAT();
+      const response = await satService.verificarSesionSAT();
       if (response.success && response.estadoSesion) {
         setSesion({
           active: response.estadoSesion.sesionActiva,
@@ -69,7 +69,7 @@ const SesionSAT = ({ onSesionChange }) => {
     setMessage(null);
     
     try {
-      const response = await iniciarSesionSAT(formData);
+      const response = await satService.iniciarSesionSAT(formData);
       
       if (response.success) {
         setMessage('Sesión iniciada correctamente con SAT');
@@ -96,7 +96,7 @@ const SesionSAT = ({ onSesionChange }) => {
     setLoading(true);
     
     try {
-      const response = await cerrarSesionSAT();
+      const response = await satService.cerrarSesionSAT();
       
       if (response.success) {
         setMessage('Sesión cerrada correctamente');
