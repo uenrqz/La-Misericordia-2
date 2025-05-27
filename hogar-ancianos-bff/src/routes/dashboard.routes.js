@@ -39,19 +39,19 @@ router.get('/', authenticate(['admin', 'medico', 'enfermera', 'secretaria']), as
     // Utilizamos Promise.allSettled para evitar que un error en una llamada afecte a las demás
     const results = await Promise.allSettled([
       withRetry(() => apiClient.get('/api/residentes/stats', {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       })),
       
       withRetry(() => apiClient.get('/api/donaciones?limit=5', {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       })),
       
       withRetry(() => apiClient.get('/api/finanzas/resumen', {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       })),
       
       withRetry(() => apiClient.get('/api/residentes/ocupacion', {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       }))
     ]);
     
@@ -80,7 +80,7 @@ router.get('/', authenticate(['admin', 'medico', 'enfermera', 'secretaria']), as
     if (req.user.role === 'medico' || req.user.role === 'enfermera' || req.user.role === 'admin') {
       try {
         signosVitales = await withRetry(() => apiClient.get('/api/residentes/signos-vitales/recientes', {
-          headers: { Authorization: `Bearer ${req.user.originalToken}` }
+          headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
         }));
       } catch (error) {
         console.error('Error al obtener signos vitales:', error.message);
@@ -92,7 +92,7 @@ router.get('/', authenticate(['admin', 'medico', 'enfermera', 'secretaria']), as
     let graficasData;
     try {
       graficasData = await withRetry(() => apiClient.get('/api/finanzas/graficas/mensuales', {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       }));
     } catch (error) {
       console.error('Error al obtener datos para gráficas:', error.message);

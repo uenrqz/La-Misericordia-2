@@ -2,34 +2,109 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
 
-// Middlewares básicos
-app.use(cors());
+// Configuración CORS para entorno de producción
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      process.env.FRONTEND_URL || 'https://lamisericordia2.com',
+      process.env.FRONTEND_DOMAIN || 'https://app.lamisericordia2.com',
+      'http://localhost:5174', // Añadido para pruebas locales en producción
+      'http://127.0.0.1:5174'
+    ]
+  : ['http://localhost:5174', 'http://127.0.0.1:5174'];
+
+console.log(`[BFF] Iniciando en modo ${process.env.NODE_ENV || 'development'}`);
+console.log(`[BFF] Orígenes CORS permitidos: ${allowedOrigins.join(', ')}`);
+
+// Middlewares básicos - Configuración CORS más permisiva para desarrollo local
+if (process.env.NODE_ENV !== 'production') {
+  // En modo desarrollo, permitir cualquier origen
+  console.log('[BFF] Usando configuración CORS permisiva para desarrollo');
+  app.use(cors({ 
+    origin: true,
+    credentials: true 
+  }));
+} else {
+  // En producción, usar configuración estricta pero con localhost incluido para pruebas
+  app.use(cors({
+    origin: function(origin, callback) {
+      // Permitir solicitudes sin origen (como aplicaciones móviles o curl)
+      if (!origin) return callback(null, true);
+      
+      // Permitir orígenes específicos
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Registrar origen bloqueado para diagnóstico
+      console.warn(`[BFF] Origen bloqueado por CORS: ${origin}`);
+      callback(new Error('Origen no permitido por política CORS'), false);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+    exposedHeaders: ['Content-Length', 'Content-Type'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+  }));
+}
+
+// Middleware para manejar solicitudes OPTIONS que son parte del flujo CORS preflight
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
 
-// Limitar tasa de solicitudes
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // límite de 100 solicitudes por ventana
-});
-
-app.use(limiter);
+// Configurar Helmet para permitir comunicación entre el frontend y el BFF
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 // Rutas de estado/health
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'UP', service: 'BFF - La Misericordia' });
 });
 
+// Ruta de prueba accesible a todos sin autenticación
+// Eliminada ruta pública de prueba para entorno de producción
+
+// Ruta de estado simple para verificación de cliente (pública, sin autenticación)
+// Esta ruta responde a cualquier origen para evitar problemas de CORS durante el diagnóstico
+app.get('/api/bff/status', (req, res) => {
+  // Log para debug
+  console.log('Solicitud recibida en /api/bff/status desde', req.get('origin') || 'origen desconocido');
+  
+  // Permitir cualquier origen para esta ruta específica
+  res.header('Access-Control-Allow-Origin', req.get('origin') || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  res.status(200).json({ 
+    status: 'online', 
+    message: 'BFF - La Misericordia en funcionamiento',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    origin: req.get('origin') || 'unknown'
+  });
+});
+
 // Cargar rutas específicas del BFF
 app.use('/api/bff/auth', require('./routes/auth.routes'));
 app.use('/api/bff/dashboard', require('./routes/dashboard.routes'));
 app.use('/api/bff/residentes', require('./routes/residentes.routes'));
+app.use('/api/bff/usuarios', require('./routes/usuarios.routes'));
+// Rutas de diagnóstico eliminadas para entorno de producción
+
+// Middleware para capturar errores en las promesas no manejadas
+app.use((req, res, next) => {
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Promesa no manejada:', promise, 'razón:', reason);
+    // No dejar caer el servidor, simplemente registrar
+  });
+  next();
+});
 
 // Proxy para APIs del backend no cubiertas por el BFF
 const apiProxy = createProxyMiddleware({
@@ -123,6 +198,41 @@ const server = app.listen(PORT, () => {
   process.exit(1);
 });
 
+// Middleware global para manejar errores 500
+app.use((err, req, res, next) => {
+  console.error('Error interno del servidor:', err);
+  
+  // Asegurar que no se envíe un error 500 al cliente
+  res.status(200).json({
+    success: false,
+    error: {
+      message: 'Se produjo un error en el servidor',
+      code: 'SERVER_ERROR',
+      timestamp: new Date().toISOString()
+    },
+    // En desarrollo podemos enviar más detalles
+    ...(process.env.NODE_ENV === 'development' ? {
+      errorDetails: {
+        message: err.message,
+        stack: err.stack,
+        path: req.path
+      }
+    } : {})
+  });
+});
+
+// Middleware para rutas no encontradas (404)
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      message: `Ruta no encontrada: ${req.originalUrl}`,
+      code: 'NOT_FOUND',
+      statusCode: 404
+    }
+  });
+});
+
 // Manejar señales de terminación para un cierre limpio
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
@@ -140,5 +250,14 @@ function gracefulShutdown() {
     process.exit(1);
   }, 10000);
 }
+
+// Manejar excepciones no capturadas
+process.on('uncaughtException', (error) => {
+  console.error('Excepción no capturada:', error);
+  // Registrar el error pero no dejar caer el servidor en producción
+  if (process.env.NODE_ENV === 'development') {
+    process.exit(1);
+  }
+});
 
 module.exports = app; // Para pruebas

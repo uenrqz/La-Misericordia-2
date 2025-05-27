@@ -75,15 +75,22 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  // Destructuring de los datos
-  const { residentes, donaciones, totalDonaciones, finanzas, ocupacion, graficas } = dashboardData;
+  // Destructuring de los datos con valores por defecto para evitar errores
+  const { 
+    residentes = { total: 0, activos: 0 }, 
+    donaciones = [], 
+    totalDonaciones = 0, 
+    finanzas = { totalIngresos: 0, totalEgresos: 0, netBalance: 0 }, 
+    ocupacion = { total: 50, ocupados: 0, disponibles: 50 }, 
+    graficas = { monthlyData: { labels: [], datasets: [] } }
+  } = dashboardData || {};
   
   // Datos para el gráfico de dona de ocupación
   const donutData = {
     labels: ['Ocupación', 'Disponible'],
     datasets: [
       {
-        data: [ocupacion.ocupados, ocupacion.disponibles],
+        data: [ocupacion?.ocupados || 0, ocupacion?.disponibles || 50],
         backgroundColor: ['#1e3a8a', '#fbbf24'],
       },
     ],
@@ -110,7 +117,7 @@ const Dashboard = () => {
           {/* Panel Administrativo - Métricas Principales */}
           <section className="mt-8">
             <h3 className="text-xl font-medium text-gray-700">Panel Administrativo</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mt-4">
               <div className="bg-white rounded-lg p-5 border border-gray-100">
                 <div className="flex items-start justify-between">
                   <div>
@@ -173,7 +180,7 @@ const Dashboard = () => {
           <section className="mt-8">
             <h3 className="text-xl font-medium text-gray-700">Acciones Administrativas</h3>
             <div className="bg-white rounded-lg border border-gray-100 p-4 mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                 <Link to="/app/residentes/nuevo" className="flex items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center">
                   <div>
                     <div className="flex justify-center mb-2">
@@ -239,8 +246,8 @@ const Dashboard = () => {
 
           {/* Gráficos - Estadísticas */}
           <section className="mt-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              <div className="md:col-span-1 lg:col-span-2">
                 <h3 className="text-xl font-medium text-gray-700">Balance Financiero</h3>
                 <div className="bg-white rounded-lg border border-gray-100 p-4 mt-4">
                   <div className="flex justify-between items-center mb-4">
@@ -251,7 +258,7 @@ const Dashboard = () => {
                     </Link>
                   </div>
                   <div className="h-64">
-                    <Line data={graficas.monthlyData} options={{ responsive: true, maintainAspectRatio: false }} />
+                    <Line data={graficas?.monthlyData || { labels: [], datasets: [] }} options={{ responsive: true, maintainAspectRatio: false }} />
                   </div>
                 </div>
               </div>
@@ -276,7 +283,7 @@ const Dashboard = () => {
           <section className="mt-8">
             <h3 className="text-xl font-medium text-gray-700">Accesos Rápidos</h3>
             <div className="bg-white rounded-lg border border-gray-100 p-4 mt-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
                 <Link to="/app/donaciones" className="flex items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center">
                   <div>
                     <div className="flex justify-center mb-2">

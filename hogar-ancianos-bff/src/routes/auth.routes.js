@@ -50,4 +50,59 @@ router.get('/verify', async (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/bff/auth/refresh
+ * @desc Refrescar el token BFF usando el token original del backend
+ * @access Privado
+ */
+router.post('/refresh', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No autenticado' });
+  }
+  const bffToken = authHeader.split(' ')[1];
+  try {
+    // Decodificar el token BFF
+    const decoded = authService.verifyToken(bffToken);
+    const originalToken = decoded.originalToken;
+    // Llamar al backend para refrescar el token original
+    const backendResponse = await authService.refreshBackendToken(originalToken);
+    // Generar nuevo token BFF con el nuevo token del backend
+    const newBffToken = authService.generateBffToken({
+      user: backendResponse.user,
+      token: backendResponse.token
+    });
+    res.json({
+      token: newBffToken,
+      user: backendResponse.user
+    });
+  } catch (error) {
+    res.status(error.status || 401).json({
+      message: error.message || 'No se pudo refrescar el token',
+      data: error.data
+    });
+  }
+});
+
+/**
+ * @route POST /api/bff/auth/logout
+ * @desc Cerrar sesión del usuario
+ * @access Privado
+ */
+router.post('/logout', async (req, res) => {
+  try {
+    // Solo confirmar que el logout fue exitoso
+    // El frontend se encarga de limpiar el almacenamiento local
+    res.json({ 
+      success: true, 
+      message: 'Sesión cerrada exitosamente' 
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error al cerrar sesión',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

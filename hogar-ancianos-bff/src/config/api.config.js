@@ -12,6 +12,19 @@ const apiClient = axios.create({
   maxRedirects: 5
 });
 
+// Interceptor para agregar el token recibido en la petición original (si existe)
+apiClient.interceptors.request.use(
+  config => {
+    // Si la petición original tiene un token (por ejemplo, desde req.headers.authorization), reenviarlo
+    if (config.headers && config.headers._originalAuthorization) {
+      config.headers.Authorization = config.headers._originalAuthorization;
+      delete config.headers._originalAuthorization; // Limpiar para evitar problemas
+    }
+    return config;
+  },
+  error => Promise.reject(error)
+);
+
 // Interceptor para manejo de errores
 apiClient.interceptors.response.use(
   response => response,

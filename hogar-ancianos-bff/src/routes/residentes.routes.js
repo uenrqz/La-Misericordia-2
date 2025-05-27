@@ -38,7 +38,7 @@ router.get('/', authenticate(['admin', 'medico', 'enfermera', 'cuidador', 'secre
   try {
     const response = await withRetry(() => apiClient.get('/api/residentes', {
       params: req.query,
-      headers: { Authorization: `Bearer ${req.user.originalToken}` }
+      headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
     }));
     
     res.json(response.data);
@@ -63,17 +63,17 @@ router.get('/:id', authenticate(['admin', 'medico', 'enfermera', 'cuidador', 'se
     // Usando Promise.allSettled para manejar errores individuales
     const results = await Promise.allSettled([
       withRetry(() => apiClient.get(`/api/residentes/${req.params.id}`, {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       })),
       
       withRetry(() => apiClient.get(`/api/residentes/${req.params.id}/signos-vitales`, {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       })),
       apiClient.get(`/api/residentes/${req.params.id}/evoluciones`, {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       }).catch(() => ({ data: [] })),
       apiClient.get(`/api/residentes/${req.params.id}/ordenes-medicas`, {
-        headers: { Authorization: `Bearer ${req.user.originalToken}` }
+        headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
       }).catch(() => ({ data: [] }))
     ]);
 
@@ -100,7 +100,7 @@ router.get('/:id', authenticate(['admin', 'medico', 'enfermera', 'cuidador', 'se
 router.post('/', authenticate(['admin', 'medico', 'secretaria']), async (req, res) => {
   try {
     const response = await apiClient.post('/api/residentes', req.body, {
-      headers: { Authorization: `Bearer ${req.user.originalToken}` }
+      headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
     });
     
     res.status(201).json(response.data);
@@ -120,7 +120,7 @@ router.post('/', authenticate(['admin', 'medico', 'secretaria']), async (req, re
 router.put('/:id', authenticate(['admin', 'medico', 'secretaria']), async (req, res) => {
   try {
     const response = await apiClient.put(`/api/residentes/${req.params.id}`, req.body, {
-      headers: { Authorization: `Bearer ${req.user.originalToken}` }
+      headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
     });
     
     res.json(response.data);
@@ -140,7 +140,7 @@ router.put('/:id', authenticate(['admin', 'medico', 'secretaria']), async (req, 
 router.delete('/:id', authenticate(['admin']), async (req, res) => {
   try {
     await apiClient.delete(`/api/residentes/${req.params.id}`, {
-      headers: { Authorization: `Bearer ${req.user.originalToken}` }
+      headers: { _originalAuthorization: `Bearer ${req.user.originalToken}` }
     });
     
     res.status(204).end();

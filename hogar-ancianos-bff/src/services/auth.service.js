@@ -126,6 +126,37 @@ class AuthService {
       return false;
     }
   }
+
+  /**
+   * Refrescar el token original del backend
+   * @param {String} originalToken - Token actual del backend
+   * @returns {Promise<Object>} - Nuevo token y datos de usuario
+   */
+  async refreshBackendToken(originalToken) {
+    try {
+      const response = await apiClient.post('/api/auth/refresh', {}, {
+        headers: { Authorization: `Bearer ${originalToken}` }
+      });
+      if (!response.data || !response.data.token) {
+        throw {
+          status: 401,
+          message: 'Respuesta inválida del backend al refrescar token'
+        };
+      }
+      return response.data;
+    } catch (error) {
+      let status = error.status || (error.response ? error.response.status : 401);
+      let message = 'No se pudo refrescar el token del backend';
+      if (error.response && error.response.data && error.response.data.message) {
+        message = error.response.data.message;
+      }
+      throw {
+        status,
+        message,
+        data: error.data || (error.response ? error.response.data : null)
+      };
+    }
+  }
 }
 
 module.exports = new AuthService();

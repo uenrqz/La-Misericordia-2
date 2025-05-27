@@ -113,7 +113,11 @@ exports.login = async (req, res) => {
     // Verificar la contraseña con bcrypt
     let passwordIsValid = false;
     
-    if (userData.password.startsWith('$2a$')) {
+    if (
+      userData.password.startsWith('$2a$') ||
+      userData.password.startsWith('$2b$') ||
+      userData.password.startsWith('$2y$')
+    ) {
       // Formato bcrypt
       passwordIsValid = bcrypt.compareSync(password, userData.password);
     } else {

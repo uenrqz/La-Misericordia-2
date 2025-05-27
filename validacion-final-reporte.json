@@ -1,0 +1,64 @@
+{
+  "fecha": "2025-05-24T04:15:17.200Z",
+  "porcentajeCompletitud": 83,
+  "resultados": {
+    "componentes": {
+      "exitosos": 6,
+      "fallidos": 0
+    },
+    "servicios": {
+      "exitosos": 1,
+      "fallidos": 3
+    },
+    "scripts": {
+      "exitosos": 5,
+      "fallidos": 0
+    },
+    "configuracion": {
+      "exitosos": 3,
+      "fallidos": 1
+    },
+    "documentacion": {
+      "exitosos": 5,
+      "fallidos": 0
+    }
+  },
+  "detalles": [
+    {
+      "categoria": "componentes",
+      "tipo": "exito",
+      "mensaje": "Contexto del sistema con manejo de errores"
+    },
+    {
+      "categoria": "componentes",
+      "tipo": "exito",
+      "mensaje": "Sistema de notificaciones"
+    },
+    {
+      "categoria": "componentes",
+      "tipo": "exito",
+      "mensaje": "Manejador de errores 500"
+    },
+    {
+      "categoria": "componentes",
+      "tipo": "exito",
+      "mensaje": "Sistema de refresh tokens automático"
+    },
+    {
+      "categoria": "componentes",
+      "tipo": "exito",
+      "mensaje": "Cliente API con manejo de errores"
+    },
+    {
+      "categoria": "componentes",
+      "tipo": "exito",
+      "mensaje": "Diagnóstico avanzado del sistema"
+    }
+  ],
+  "recomendaciones": [
+    "Verificar la implementación de los servicios backend/BFF",
+    "Completar la configuración de producción",
+    "Ejecutar pruebas de flujo completo antes del despliegue",
+    "Verificar que todos los servicios estén funcionando correctamente"
+  ]
+}

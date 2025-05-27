@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import SafariIcon from '../components/ui/SafariIcon';
 
 /**
  * Layout compartido para los dashboards
@@ -8,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 const DashboardLayout = ({ children, user }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  // Estado para controlar si el sidebar está abierto o cerrado
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Función para cerrar sesión
   const handleLogout = () => {
@@ -50,13 +53,26 @@ const DashboardLayout = ({ children, user }) => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200">
+      <aside className={`transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200`}>
         {/* Logo y nombre */}
-        <div className="flex items-center gap-2 p-4 border-b">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
-            <span className="font-bold">LM</span>
+        <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
+              <span className="font-bold">LM</span>
+            </div>
+            {sidebarOpen && <span className="font-semibold text-lg">La Misericordia</span>}
           </div>
-          <span className="font-semibold text-lg">La Misericordia</span>
+          <button 
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1 hover:bg-gray-100 rounded text-gray-500 flex items-center justify-center"
+            style={{ minWidth: '32px', minHeight: '32px' }}
+          >
+            <SafariIcon 
+              icon={sidebarOpen ? 'chevron-left' : 'chevron-right'} 
+              size={16} 
+              className="text-gray-500" 
+            />
+          </button>
         </div>
         
         {/* Menú de navegación */}
@@ -66,14 +82,19 @@ const DashboardLayout = ({ children, user }) => {
               <li key={item.to}>
                 <Link 
                   to={item.to} 
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  className={`flex items-center ${sidebarOpen ? 'gap-3' : 'justify-center'} px-3 py-2 rounded-md text-sm transition-colors ${
                     location.pathname === item.to || location.pathname.startsWith(item.to + '/') 
                       ? 'bg-primary text-white' 
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
+                  title={!sidebarOpen ? item.label : ""}
                 >
-                  <i className={`fas fa-${item.icon} w-5 h-5`}></i>
-                  <span>{item.label}</span>
+                  <SafariIcon 
+                    icon={item.icon} 
+                    size={sidebarOpen ? 20 : 24} 
+                    className={sidebarOpen ? '' : 'mx-auto'} 
+                  />
+                  {sidebarOpen && <span>{item.label}</span>}
                 </Link>
               </li>
             ))}
@@ -82,25 +103,38 @@ const DashboardLayout = ({ children, user }) => {
         
         {/* Perfil del usuario */}
         <div className="mt-auto border-t p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium">
-                  {getInitials(user?.name || 'Usuario Anónimo')}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-medium">{user?.name || 'Usuario'}</p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role || 'Sin rol'}</p>
-              </div>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
-              aria-label="Cerrar sesión"
-            >
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
+          <div className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+            {sidebarOpen ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-medium">
+                      {getInitials(user?.name || 'Usuario Anónimo')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{user?.name || 'Usuario'}</p>
+                    <p className="text-xs text-gray-500 capitalize">{user?.role || 'Sin rol'}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
+                  aria-label="Cerrar sesión"
+                  title="Cerrar sesión"
+                >
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={handleLogout}
+                className="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
+              >
+                <i className="fas fa-sign-out-alt"></i>
+              </button>
+            )}
           </div>
         </div>
       </aside>

@@ -23,11 +23,34 @@ apiClient.interceptors.request.use(
 
 // Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
-  response => response,
-  error => {
+  response => {
+    // Devolver solo los datos de la respuesta para simplificar el manejo
+    return response.data;
+  },
+  async error => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Intentar refresh automático antes de redirigir al login
+      const token = localStorage.getItem('token');
+      if (token && !error.config._retry) {
+        try {
+          error.config._retry = true;
+          // Llamar al endpoint de refresh del BFF
+          const refreshResponse = await apiClient.post('/auth/refresh');
+          if (refreshResponse && refreshResponse.token) {
+            localStorage.setItem('token', refreshResponse.token);
+            // Reintentar la petición original con el nuevo token
+            error.config.headers['Authorization'] = `Bearer ${refreshResponse.token}`;
+            return apiClient.request(error.config);
+          }
+        } catch (refreshError) {
+          // Si falla el refresh, limpiar y redirigir
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+      } else {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

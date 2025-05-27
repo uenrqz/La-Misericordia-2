@@ -1,0 +1,156 @@
+{
+  "fecha": "2025-05-24T13:52:09.087Z",
+  "resumen": {
+    "exitosos": 15,
+    "fallidos": 0,
+    "advertencias": 1,
+    "detalles": [
+      {
+        "tipo": "exito",
+        "mensaje": "Frontend online"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "BFF online"
+      },
+      {
+        "tipo": "advertencia",
+        "mensaje": "Backend estado 404"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Autenticación admin"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Verificación token"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Error 404 manejado"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Error 401 manejado"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Recuperación automática"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Archivo existe: SystemNotification.jsx"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Archivo existe: SystemContext.jsx"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Archivo existe: errorHandler.js"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Config existe: iniciar-sistema.js"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Config existe: verificar_sistema.js"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Config existe: estado-sistema.js"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Config existe: iniciar_produccion.sh"
+      },
+      {
+        "tipo": "exito",
+        "mensaje": "Config existe: PRODUCCION_README.md"
+      }
+    ]
+  },
+  "detalles": [
+    {
+      "tipo": "exito",
+      "mensaje": "Frontend online"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "BFF online"
+    },
+    {
+      "tipo": "advertencia",
+      "mensaje": "Backend estado 404"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Autenticación admin"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Verificación token"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Error 404 manejado"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Error 401 manejado"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Recuperación automática"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Archivo existe: SystemNotification.jsx"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Archivo existe: SystemContext.jsx"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Archivo existe: errorHandler.js"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Config existe: iniciar-sistema.js"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Config existe: verificar_sistema.js"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Config existe: estado-sistema.js"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Config existe: iniciar_produccion.sh"
+    },
+    {
+      "tipo": "exito",
+      "mensaje": "Config existe: PRODUCCION_README.md"
+    }
+  ],
+  "configuracion": {
+    "bffUrl": "http://localhost:4000/api/bff",
+    "backendUrl": "http://localhost:3000/api",
+    "frontendUrl": "http://localhost:5174",
+    "timeout": 10000,
+    "credenciales": {
+      "admin": {
+        "username": "admin",
+        "password": "Admin2025!"
+      },
+      "prueba": {
+        "username": "usuario_prueba",
+        "password": "prueba123"
+      }
+    }
+  }
+}

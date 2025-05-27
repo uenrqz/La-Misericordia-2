@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import { getMedicosDashboardData } from '../services/dashboard.service';
 import { formatDateEs, getCurrentDate } from '../utils/format';
+import { useSystem } from '../contexts/SystemContext'; // Importar hook de SystemContext
 
 ChartJS.register(
   CategoryScale,
@@ -27,6 +28,9 @@ ChartJS.register(
 );
 
 const MedicosDashboard = () => {
+  // Obtener contexto del sistema para manejo de errores
+  const { handleError500, systemStatus } = useSystem();
+  
   // Obtener hora del día para el saludo
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -36,6 +40,7 @@ const MedicosDashboard = () => {
   };
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState({
     residentesActivos: 0,
     pacientesPorCategoria: {
@@ -59,17 +64,27 @@ const MedicosDashboard = () => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await getMedicosDashboardData();
         setDashboardData(data);
       } catch (error) {
         console.error('Error al cargar datos del dashboard médico:', error);
+        setError('No fue posible cargar la información del dashboard');
+        
+        // Si es un error 500, manejarlo con el sistema de notificaciones
+        if (error.response?.status === 500 || error.message?.includes('500')) {
+          handleError500();
+        }
       } finally {
         setLoading(false);
       }
     };
     
-    loadDashboardData();
-  }, []);
+    // Solo cargar datos si el sistema está online
+    if (systemStatus.bff === 'online' || systemStatus.bff === 'unknown') {
+      loadDashboardData();
+    }
+  }, [systemStatus.bff, handleError500]);
 
   // Datos para el gráfico de barras de condiciones médicas
   const condicionesMedicasData = {
@@ -102,9 +117,42 @@ const MedicosDashboard = () => {
       <h2 className="text-xl font-medium text-gray-700 mt-2">{getGreeting()}, Doctor</h2>
       <p className="text-gray-500 text-sm">{getCurrentDate()}</p>
       
+      {/* Indicador de estado del sistema */}
+      {!loading && systemStatus.bff !== 'online' && (
+        <div className="mt-4 p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+          <div className="flex items-center">
+            <div className="mr-3">
+              <i className="fas fa-exclamation-triangle text-yellow-600"></i>
+            </div>
+            <div>
+              <p className="font-medium text-yellow-700">Estado del sistema: {systemStatus.bff}</p>
+              <p className="text-sm text-yellow-600">Algunas funcionalidades podrían estar limitadas</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {loading ? (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        <div className="mt-4 p-5 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center">
+            <div className="mr-3 text-red-500">
+              <i className="fas fa-exclamation-circle text-xl"></i>
+            </div>
+            <div>
+              <p className="font-medium text-red-700">Error al cargar datos</p>
+              <p className="text-sm text-red-600">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-2 bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-3 rounded"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <>

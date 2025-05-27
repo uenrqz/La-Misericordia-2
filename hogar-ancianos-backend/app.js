@@ -28,6 +28,7 @@ app.use('/api/residentes', require('./src/routes/signos-vitales.routes'));
 app.use('/api/residentes', require('./src/routes/evoluciones.routes'));
 app.use('/api/residentes', require('./src/routes/ordenes-medicas.routes'));
 app.use('/api/donaciones', require('./src/routes/donaciones.routes'));
+app.use('/api/finanzas', require('./src/routes/finanzas.routes'));
 
 // Ruta de salud para monitoreo
 app.get('/health', (req, res) => {
@@ -37,6 +38,15 @@ app.get('/health', (req, res) => {
     service: 'Backend - La Misericordia',
     version: '1.0.0',
     database: 'connected'
+  });
+});
+
+// Ruta de estado para BFF
+app.get('/api/status', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -59,6 +69,26 @@ app.use((err, req, res, next) => {
 // Puerto
 const PORT = process.env.PORT || 3000;
 
+// Importar configuración de base de datos
+const { testConnection } = require('./src/config/database');
+
+// En modo producción, asegurarse de que exista el usuario administrador
+if (process.env.NODE_ENV === 'production') {
+  const { aplicarAdminProduccion } = require('./src/utils/admin-produccion');
+  
+  // Ejecutar al iniciar
+  (async () => {
+    try {
+      await testConnection();
+      console.log('Configurando sistema para entorno de producción...');
+      await aplicarAdminProduccion();
+      console.log('Sistema listo para producción');
+    } catch (err) {
+      console.error('Error configurando sistema para producción:', err);
+    }
+  })();
+}
+
 app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+  console.log(`Servidor ejecutándose en el puerto ${PORT} en modo ${process.env.NODE_ENV || 'development'}`);
 });

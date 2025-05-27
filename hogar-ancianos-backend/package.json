@@ -29,8 +29,10 @@
     "express": "^5.1.0",
     "express-fileupload": "^1.5.1",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.1",
     "oauth2-server": "^3.1.1",
     "pg": "^8.15.6",
+    "sequelize": "^6.37.7",
     "uuid": "^11.1.0",
     "xmlbuilder2": "^3.1.1"
   },

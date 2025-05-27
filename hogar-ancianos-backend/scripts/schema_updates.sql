@@ -45,6 +45,24 @@ CREATE TABLE IF NOT EXISTS ordenes_medicas (
     fecha_vencimiento DATE
 );
 
+-- Crear tabla para medicamentos (catálogo)
+CREATE TABLE IF NOT EXISTS medicamentos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT,
+    tipo VARCHAR(50),
+    unidad_medida VARCHAR(20),
+    stock_minimo INTEGER DEFAULT 0,
+    stock_actual INTEGER DEFAULT 0,
+    precio_unitario DECIMAL(10,2),
+    proveedor VARCHAR(100),
+    numero_lote VARCHAR(50),
+    fecha_vencimiento DATE,
+    activo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 -- Crear tabla para medicamentos de residentes (cardex)
 CREATE TABLE IF NOT EXISTS medicamentos_residentes (
     id SERIAL PRIMARY KEY,

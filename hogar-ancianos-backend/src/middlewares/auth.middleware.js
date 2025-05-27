@@ -35,6 +35,49 @@ exports.authenticate = (roles = []) => {
 };
 
 /**
+ * Middleware para verificación de roles
+ * @param {Array} allowedRoles - Array con los roles permitidos
+ * @returns {Function} - Middleware Express
+ */
+exports.hasRole = (allowedRoles = []) => {
+  return (req, res, next) => {
+    // Si no especificó roles, permitir el acceso
+    if (allowedRoles.length === 0) {
+      return next();
+    }
+
+    // Obtener el token del header de autorización
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Acceso no autorizado. Se requiere token de autenticación' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    try {
+      // Verificar el token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Verificar si el rol del usuario está en los roles permitidos
+      if (!allowedRoles.includes(decoded.rol)) {
+        return res.status(403).json({ 
+          message: 'Permisos insuficientes para acceder a este recurso',
+          requiredRoles: allowedRoles,
+          userRole: decoded.rol
+        });
+      }
+
+      // Agregar la información del usuario decodificada a la petición
+      req.user = decoded;
+      next();
+    } catch (err) {
+      console.error('Error en verificación de roles:', err);
+      return res.status(401).json({ message: 'Token inválido o expirado' });
+    }
+  };
+};
+
+/**
  * Generar token JWT para el usuario
  * @param {Object} userData - Datos del usuario a incluir en el token
  * @returns {String} - Token JWT generado

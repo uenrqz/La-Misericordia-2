@@ -1,17 +1,15 @@
-import axios from 'axios';
+import apiClient from './api.config';
+import authService from './auth.service';
+import { recuperarDeErrores500, diagnosticarErrores500 } from '../utils/errorHandler';
 
-// URL base de la API (podría venir de configuración)
-const API_URL = 'http://localhost:4000/api/bff';
+// Constantes
+const API_BASE = '/api';
 
 // Servicio para obtener datos para el dashboard de administración
 export const getAdminDashboardData = async () => {
   try {
     // Llamada optimizada al BFF que combina múltiples peticiones en una
-    const dashboardResponse = await axios.get(`${API_URL}/dashboard`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const dashboardResponse = await apiClient.get('/dashboard');
     
     // El BFF ya proporciona los datos combinados
     return dashboardResponse.data;
@@ -65,11 +63,11 @@ export const getAdminDashboardData = async () => {
 export const getEnfermeriaDashboardData = async () => {
   try {
     // Obtener resumen de residentes
-    const residentesResponse = await axios.get(`${API_URL}/residentes`);
+    const residentesResponse = await apiClient.get('/residentes');
     
     // Obtener signos vitales recientes (limitado a 5)
     const signosVitalesPromises = residentesResponse.data.slice(0, 5).map(residente => 
-      axios.get(`${API_URL}/residentes/${residente.id}/signos-vitales`)
+      apiClient.get(`/residentes/${residente.id}/signos-vitales`)
         .then(response => ({
           ...response.data,
           residenteNombre: residente.nombre,
@@ -158,11 +156,11 @@ export const getEnfermeriaDashboardData = async () => {
 export const getMedicosDashboardData = async () => {
   try {
     // Obtener resumen de residentes
-    const residentesResponse = await axios.get(`${API_URL}/residentes`);
+    const residentesResponse = await apiClient.get('/residentes');
     
     // Obtener órdenes médicas activas
     const ordenesMedicasPromises = residentesResponse.data.slice(0, 5).map(residente => 
-      axios.get(`${API_URL}/residentes/${residente.id}/ordenes?estado=activo`)
+      apiClient.get(`/residentes/${residente.id}/ordenes?estado=activo`)
         .then(response => ({
           ...response.data,
           residenteNombre: residente.nombre,
