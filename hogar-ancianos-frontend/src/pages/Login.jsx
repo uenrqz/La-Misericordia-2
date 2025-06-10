@@ -1,231 +1,282 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaLock, FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
-import logoImage from '../assets/images/logo.png';
-import authService from '../services/auth.service';
-import CambioPasswordObligatorio from '../components/CambioPasswordObligatorio';
-import { useSystem } from '../contexts/SystemContext';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import logoImg from '../assets/images/logo.png';
+import usuariosService from '../services/usuarios.service';
 import './Login.css';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showCambioPassword, setShowCambioPassword] = useState(false);
-  const [usuarioActual, setUsuarioActual] = useState(null);
-  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar contraseña
-  // Usamos try-catch para manejar el caso de que el contexto no esté disponible
-  const systemContext = { showNotification: () => {} };
-  try {
-    Object.assign(systemContext, useSystem());
-  } catch (err) {
-    console.warn('SystemContext no disponible en Login');
-  }
-  const { showNotification } = systemContext;
+  const [errorMessage, setErrorMessage] = useState('');
+  const [userType, setUserType] = useState('admin'); // admin, enfermero, doctor
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // Usar usuarios predefinidos para el login
+  useEffect(() => {
+    // Usuarios predefinidos para el login - solo información básica
+    const usuariosPredefinidos = [
+      { id: 1, username: 'admin', nombre: 'Administrador', apellido: 'Sistema', rol: 'admin' },
+      { id: 2, username: 'u.enrqz', nombre: 'Ulises', apellido: 'Enriquez', rol: 'admin' },
+      { id: 3, username: 'dr.perez', nombre: 'Dr. Juan', apellido: 'Pérez', rol: 'medico' },
+      { id: 4, username: 'enf.garcia', nombre: 'Enf. María', apellido: 'García', rol: 'enfermera' },
+    ];
+    
+    setUsuarios(usuariosPredefinidos);
+    // Filtrar inicialmente por el tipo de usuario seleccionado (admin)
+    filterUsuariosByTypeLocal(usuariosPredefinidos, 'admin');
+  }, []);
+
+  // Filtrar usuarios por tipo seleccionado con usuarios precargados
+  const filterUsuariosByTypeLocal = (usuariosLista, tipo) => {
+    if (!usuariosLista || usuariosLista.length === 0) return;
+    
+    let filtrados = [];
+    if (tipo === 'admin') {
+      filtrados = usuariosLista.filter(user => 
+        user.role === 'admin' || 
+        user.rol === 'admin' || 
+        user.username === 'admin' || 
+        user.username === 'u.enrqz'
+      );
+    } else if (tipo === 'enfermero') {
+      filtrados = usuariosLista.filter(user => 
+        user.role === 'enfermera' || 
+        user.rol === 'enfermera' || 
+        user.role === 'enfermero' || 
+        user.rol === 'enfermero'
+      );
+    } else if (tipo === 'doctor') {
+      filtrados = usuariosLista.filter(user => 
+        user.role === 'medico' || 
+        user.rol === 'medico' || 
+        user.role === 'doctor' || 
+        user.rol === 'doctor'
+      );
+    }
+    
+    setUsuariosFiltrados(filtrados);
+    
+    // Si hay usuarios filtrados, seleccionar el primero por defecto
+    if (filtrados.length > 0) {
+      // Usar username directamente 
+      setUsername(filtrados[0].username || '');
+    } else {
+      setUsername('');
+    }
+  }
+  
+  // Filtrar usuarios por tipo seleccionado
+  const filterUsuariosByType = (tipo) => {
+    filterUsuariosByTypeLocal(usuarios, tipo);
+  };
+
+  // Cambiar el tipo de usuario
+  const handleUserTypeChange = (e) => {
+    const tipo = e.target.value;
+    setUserType(tipo);
+    filterUsuariosByType(tipo);
+  };
+
+  // Cambiar el usuario seleccionado
+  const handleUserChange = (e) => {
+    setUsername(e.target.value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
+    setErrorMessage('');
+    
+    // Validación básica
+    if (!username) {
+      setErrorMessage('Por favor, ingrese su nombre de usuario.');
+      toast.error('Por favor, ingrese su nombre de usuario.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!password || password.length < 4) {
+      setErrorMessage('La contraseña debe tener al menos 4 caracteres.');
+      toast.error('La contraseña debe tener al menos 4 caracteres.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      // Validar entrada
-      if (!username || !password) {
-        setError('Por favor ingrese usuario y contraseña');
-        setIsLoading(false);
-        return;
-      }
+      console.log('Intentando iniciar sesión con:', username);
       
-      // Usar el servicio de autenticación 
-      const result = await authService.login(username, password);
+      // Enviar directamente el username y password al backend
+      // El BFF se encargará de procesar correctamente la autenticación
+      const response = await login(username, password);
       
-      // Verificar que tenemos un token válido
-      if (!result || !result.token) {
-        setError('Respuesta de autenticación inválida. Contacte al administrador.');
-        console.error('Respuesta de login sin token:', result);
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Login exitoso, verificando si requiere cambio de contraseña...');
-      
-      // Verificar si el usuario necesita cambiar su contraseña
-      if (result.user && result.user.cambio_password_requerido) {
-        setUsuarioActual(result.user);
-        setShowCambioPassword(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Si llegamos aquí, la autenticación fue exitosa y no requiere cambio de contraseña
-      try {
-        showNotification('success', 'Inicio de sesión exitoso', `Bienvenido, ${result.user.nombre}`);
-      } catch (e) {
-        console.log(`Inicio de sesión exitoso. Bienvenido, ${result.user.nombre}`);
-      }
-      
-      // Navegar al dashboard específico según el rol del usuario
-      const userRole = result.user.role || result.user.rol;
-      if (userRole === 'medico') {
-        navigate('/app/medicos');
-      } else if (userRole === 'enfermera') {
-        navigate('/app/enfermeria');
+      if (response && response.ok) {
+        toast.success('¡Inicio de sesión exitoso!');
+        
+        // Redirección después de un breve tiempo para permitir que se muestre el toast
+        setTimeout(() => {
+          navigate('/app/dashboard');
+        }, 300);
       } else {
-        navigate('/app/dashboard');
+        // Si la respuesta existe pero no es OK
+        setErrorMessage('Credenciales inválidas o problema al iniciar sesión');
+        toast.error('Credenciales inválidas o problema al iniciar sesión');
       }
-    } catch (err) {
-      console.error('Error en el login:', err);
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
       
-      // Manejar diferentes tipos de errores
-      if (err.response) {
-        // Error con respuesta del servidor
-        if (err.response.status === 401) {
-          setError('Credenciales inválidas. Por favor verifique su usuario y contraseña.');
-        } else if (err.response.status === 500) {
-          setError('Error en el servidor. Por favor contacte al administrador del sistema.');
-        } else {
-          setError(`Error ${err.response.status}: ${err.response.data?.message || 'Error de conexión'}`);
-        }
-      } else if (err.message) {
-        // Error con mensaje específico
-        setError(err.message);
-      } else {
-        // Error genérico
-        setError('Error al intentar iniciar sesión. Por favor intente de nuevo más tarde.');
-      }
+      // Verificar si hay un mensaje específico de error del servidor
+      const errorMsg = 
+        (error.response?.data?.data?.error) || 
+        (error.response?.data?.message) || 
+        'Error al iniciar sesión. Por favor, intente nuevamente.';
+        
+      setErrorMessage(errorMsg);
+      
+      // Mostrar mensaje con toast
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Manejar la finalización del cambio de contraseña obligatorio
-  const handleCambioPasswordCompletado = () => {
-    setShowCambioPassword(false);
-    showNotification('success', 'Contraseña actualizada', 'Su contraseña ha sido actualizada correctamente');
-    
-    // Navegar al dashboard específico según el rol del usuario
-    const user = authService.getCurrentUser();
-    const userRole = user?.role || user?.rol;
-    if (userRole === 'medico') {
-      navigate('/app/medicos');
-    } else if (userRole === 'enfermera') {
-      navigate('/app/enfermeria');
-    } else {
-      navigate('/app/dashboard');
-    }
-  };
-
   return (
     <div className="login-container">
-      {/* Mostrar cambio de contraseña obligatorio si es necesario */}
-      {showCambioPassword && usuarioActual && (
-        <CambioPasswordObligatorio 
-          usuario={usuarioActual} 
-          onCompletado={handleCambioPasswordCompletado} 
-        />
-      )}
-      
       <div className="login-form-container">
-        {/* Logo y título */}
         <div className="login-logo-section">
-          <img 
-            src={logoImage} 
-            alt="Logo La Misericordia" 
+          <img
             className="login-logo"
+            src={logoImg}
+            alt="Hogar de Ancianos Varones"
           />
-          <h1 className="login-title">Hogar de Ancianos</h1>
-          <h2 className="login-subtitle">LA MISERICORDIA</h2>
-          <p className="login-description">Sistema de Administración y Control Médico</p>
+          <h2 className="login-title">
+            Hogar de Ancianos Varones
+          </h2>
+          <h1 className="login-subtitle">
+            LA MISERICORDIA
+          </h1>
+          <p className="login-description">
+            Sistema de Administración y Control Médico
+          </p>
         </div>
         
-        {/* Formulario */}
-        <div className="login-form">
-          <h2 className="login-form-title">
-            Iniciar Sesión
-          </h2>
-          
-          {error && (
+        <h3 className="login-form-title">
+          Iniciar Sesión
+        </h3>
+        
+        <form className="login-form" onSubmit={handleSubmit}>
+          {errorMessage && (
             <div className="login-error">
-              {error}
+              <p>{errorMessage}</p>
             </div>
           )}
           
-          <form onSubmit={handleSubmit}>
-            <div className="login-input-group">
-              <label htmlFor="username" className="login-label">
-                Usuario
-              </label>
-              <div className="login-input-wrapper">
-                <FaUser className="login-input-icon" />
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="login-input"
-                  placeholder="Ingrese su usuario"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="login-input-group">
-              <label htmlFor="password" className="login-label">
-                Contraseña
-              </label>
-              <div className="login-input-wrapper relative">
-                <FaLock className="login-input-icon" />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="login-input pr-10"
-                  placeholder="Ingrese su contraseña"
-                  required
-                />
-                <button 
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex="-1"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                >
-                  {showPassword ? (
-                    <FaEyeSlash className="h-5 w-5" />
-                  ) : (
-                    <FaEye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-            
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 flex items-center justify-center"
+          <div className="login-input-group">
+            <label htmlFor="userType" className="login-label">
+              Tipo de Usuario
+            </label>
+            <div className="login-select-wrapper">
+              <select
+                id="userType"
+                name="userType"
+                className="login-select"
+                value={userType}
+                onChange={handleUserTypeChange}
               >
-                {isLoading ? (
-                  <span className="inline-block h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                ) : (
-                  <FaSignInAlt className="mr-2" />
-                )}
-                {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-              </button>
+                <option value="admin">Administrador</option>
+                <option value="enfermero">Enfermero/a</option>
+                <option value="doctor">Doctor</option>
+              </select>
+              <span className="login-select-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </span>
             </div>
-          </form>
+          </div>
           
-          {process.env.NODE_ENV !== 'production' && (
-            <div className="mt-6 text-center text-sm">
-              <p className="text-gray-600">
-                <strong>Credenciales por defecto:</strong> usuario administrador configurado en sistema
-              </p>
+          <div className="login-input-group">
+            <label htmlFor="username" className="login-label">
+              Seleccionar Usuario
+            </label>
+            <div className="login-select-wrapper">
+              {isLoadingUsers ? (
+                <div className="login-loading">Cargando usuarios...</div>
+              ) : (
+                <select
+                  id="username"
+                  name="username"
+                  className="login-select"
+                  value={username}
+                  onChange={handleUserChange}
+                >
+                  {usuariosFiltrados.length > 0 ? (
+                    usuariosFiltrados.map((user) => {
+                      return (
+                        <option key={user.id} value={user.username}>
+                          {`${user.nombre || ''} ${user.apellido || ''}`}
+                        </option>
+                      );
+                    })
+                  ) : (
+                    <option value="">No hay usuarios disponibles</option>
+                  )}
+                </select>
+              )}
+              <span className="login-select-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </span>
             </div>
-          )}
-        </div>
+          </div>
+          
+          <div className="login-input-group">
+            <label htmlFor="password" className="login-label">
+              Contraseña
+            </label>
+            <div className="login-input-wrapper">
+              <span className="login-input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="login-input"
+                placeholder="Ingrese su contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="login-button-container">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="login-button"
+            >
+              <span className="login-button-icon">
+                {isLoading ? '⌛' : '🔐'}
+              </span>
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </button>
+          </div>
+          
+          <div className="login-default-credentials">
+            <p>Credenciales por defecto: usuario administrador configurado en sistema</p>
+          </div>
+        </form>
       </div>
     </div>
   );

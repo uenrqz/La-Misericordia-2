@@ -99,10 +99,15 @@ exports.login = async (req, res) => {
     }
 
     // Obtener usuario por nombre de usuario
+    console.log(`[Auth] Buscando usuario con username: ${username}`);
     const { rows } = await db.query(
-      'SELECT * FROM usuarios WHERE username = $1',
+      'SELECT id, username, password, nombre, apellido, rol, email, roles_adicionales FROM usuarios WHERE username = $1',
       [username]
     );
+    
+    if (rows.length > 0) {
+      console.log(`[Auth] Usuario encontrado: ${username}, rol: ${rows[0].rol}, roles_adicionales: ${rows[0].roles_adicionales}`);
+    }
 
     if (rows.length === 0) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
@@ -135,6 +140,16 @@ exports.login = async (req, res) => {
 
     const token = generateToken(userData);
 
+    // Procesar roles adicionales si existen
+    let rolesAdicionales = [];
+    try {
+      if (userData.roles_adicionales) {
+        rolesAdicionales = JSON.parse(userData.roles_adicionales);
+      }
+    } catch (e) {
+      console.error('Error al parsear roles adicionales:', e);
+    }
+    
     res.json({
       token,
       user: {
@@ -143,7 +158,8 @@ exports.login = async (req, res) => {
         nombre: userData.nombre,
         apellido: userData.apellido,
         rol: userData.rol,
-        email: userData.email
+        email: userData.email,
+        roles_adicionales: rolesAdicionales
       }
     });
   } catch (error) {

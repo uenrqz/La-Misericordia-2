@@ -1,21 +1,44 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
+  const [userRoles, setUserRoles] = useState([]);
+  const { user } = useAuth();
 
-  const menuItems = [
-    { path: '/app/dashboard', name: 'Dashboard', icon: '📊' },
-    { path: '/app/enfermeria', name: 'Enfermería', icon: '👩‍⚕️' },
-    { path: '/app/medicos', name: 'Médicos', icon: '👨‍⚕️' },
-    { path: '/app/residentes', name: 'Residentes', icon: '👥' },
-    { path: '/app/signos-vitales', name: 'Signos Vitales', icon: '💓' },
-    { path: '/app/ordenes-medicas', name: 'Órdenes Médicas', icon: '📋' },
-    { path: '/app/evoluciones', name: 'Evoluciones', icon: '📈' },
-    { path: '/app/donaciones', name: 'Donaciones', icon: '🎁' },
-    { path: '/app/reportes', name: 'Reportes', icon: '📊' },
+  useEffect(() => {
+    // Obtener usuario del localStorage si no está en el contexto
+    const userData = user || JSON.parse(localStorage.getItem('user') || '{}');
+    console.log("Sidebar - Datos de usuario cargados:", userData);
+    
+    const roles = userData.roles || [userData.role || userData.rol];
+    console.log("Sidebar - Roles detectados:", roles);
+    
+    setUserRoles(roles);
+  }, [user]);
+
+  // Definir todos los menús posibles
+  const allMenuItems = [
+    { path: '/app/dashboard', name: 'Dashboard (Admin)', icon: '📊', roles: ['admin'] },
+    { path: '/app/enfermeria', name: 'Dashboard Enfermería', icon: '👩‍⚕️', roles: ['enfermero', 'cuidador'] },
+    { path: '/app/medicos', name: 'Dashboard Médico', icon: '👨‍⚕️', roles: ['medico'] },
+    { path: '/app/residentes', name: 'Residentes', icon: '👥', roles: ['admin', 'medico', 'enfermero', 'cuidador'] },
+    { path: '/app/signos-vitales', name: 'Signos Vitales', icon: '💓', roles: ['medico', 'enfermero', 'cuidador'] },
+    { path: '/app/ordenes-medicas', name: 'Órdenes Médicas', icon: '📋', roles: ['medico', 'enfermero'] },
+    { path: '/app/evoluciones', name: 'Evoluciones', icon: '📈', roles: ['medico', 'enfermero'] },
+    { path: '/app/donaciones', name: 'Donaciones', icon: '🎁', roles: ['admin'] },
+    { path: '/app/reportes', name: 'Reportes', icon: '📊', roles: ['admin', 'medico'] },
+    { path: '/app/usuarios', name: 'Gestión Usuarios', icon: '👥', roles: ['admin'] },
   ];
+
+  // Filtrar menús según los roles del usuario
+  const menuItems = allMenuItems.filter(item => {
+    const hasAccess = userRoles.some(role => item.roles.includes(role));
+    console.log(`Verificando acceso a "${item.name}": roles permitidos [${item.roles}], roles usuario [${userRoles}], acceso: ${hasAccess}`);
+    return hasAccess;
+  });
 
   return (
     <div className={`bg-gray-800 text-white h-screen ${isOpen ? 'w-64' : 'w-20'} transition-all duration-300`}>
