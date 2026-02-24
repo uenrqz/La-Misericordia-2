@@ -1,64 +1,48 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Determinar el entorno
-const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-if (isProduction) {
-  console.log('Sistema en modo PRODUCCIÓN - Usando PostgreSQL');
+let sequelize;
+
+if (isDevelopment) {
+  // Configuración para desarrollo local
+  sequelize = new Sequelize(
+    process.env.DB_NAME || 'hogar_db',
+    process.env.DB_USER || 'hogar_user',
+    process.env.DB_PASSWORD || 'securepass',
+    {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      dialect: 'postgres',
+      logging: false,
+    }
+  );
 } else {
-  console.log('Sistema en modo DESARROLLO - Usando PostgreSQL con Docker');
+  // Configuración para producción (Render)
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false // CRUCIAL para Render
+      }
+    },
+    logging: false,
+  });
 }
 
-// Configuración de la base de datos
-const sequelizeConfig = isProduction ? {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'hogar_ancianos_prod',
-  username: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres123',
-  dialect: 'postgres',
-  logging: false,
-  pool: {
-    max: 20,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  dialectOptions: {
-    ssl: process.env.DB_SSL === 'true' ? {
-      require: true,
-      rejectUnauthorized: false
-    } : false
-  }
-} : {
-  host: 'localhost',
-  port: 5432,
-  database: 'hogar_db',
-  username: 'hogar_user',
-  password: 'securepass',
-  dialect: 'postgres',
-  logging: false,
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  }
-};
-
-const sequelize = new Sequelize(sequelizeConfig);
-
+// Función para probar conexión
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Conexión a la base de datos establecida correctamente.');
+    console.log('✅ Conexión a Sequelize establecida correctamente');
+    return true;
   } catch (error) {
-    console.error('Error al conectar con la base de datos:', error);
+    console.error('❌ Error de conexión a Sequelize:', error.message);
+    return false;
   }
 };
 
-module.exports = {
-  sequelize,
-  testConnection
-};
+module.exports = { sequelize, testConnection };
+

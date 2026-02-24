@@ -1,24 +1,50 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'hogar_user',
-  password: process.env.DB_PASSWORD || 'securepass',
-  database: process.env.DB_NAME || 'hogar_db'
-});
+// Configuración condicional para desarrollo/producción
+const isDevelopment = process.env.NODE_ENV === 'development';
 
+let poolConfig;
+
+if (isDevelopment) {
+  // Configuración para desarrollo local
+  poolConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'hogar_db',
+    user: process.env.DB_USER || 'hogar_user',
+    password: process.env.DB_PASSWORD || 'securepass',
+  };
+} else {
+  // Configuración para producción (Render)
+  poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      require: true,
+      rejectUnauthorized: false // CRUCIAL para Render
+    }
+  };
+}
+
+const pool = new Pool(poolConfig);
+
+// Eventos de conexión
 pool.on('connect', () => {
-  console.log('Conexión establecida con la base de datos PostgreSQL');
+  console.log('✅ Conectado a PostgreSQL correctamente');
 });
 
 pool.on('error', (err) => {
-  console.error('Error en la conexión a la base de datos:', err);
-  process.exit(-1);
+  console.error('❌ Error en la conexión a PostgreSQL:', err);
 });
 
-module.exports = {
-  query: (text, params) => pool.query(text, params),
-  pool
-};
+// Verificar conexión inmediatamente
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ Error conectando a PostgreSQL:', err.message);
+  } else {
+    console.log('✅ Conexión inicial a PostgreSQL exitosa');
+    release();
+  }
+});
+
+module.exports = { pool };
