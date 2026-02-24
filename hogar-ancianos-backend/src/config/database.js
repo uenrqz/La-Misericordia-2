@@ -75,33 +75,6 @@ if (isDevelopment) {
     throw error;
   }
 }
-  }
-  
-  try {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) {
-      throw new Error('DATABASE_URL no está definida');
-    }
-    
-    console.log('🔍 [database.js] Intentando crear Sequelize con DATABASE_URL...');
-    sequelize = new Sequelize(dbUrl, {
-      dialect: 'postgres',
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      },
-      logging: false,
-    });
-    console.log('✅ [database.js] Sequelize creado exitosamente');
-  } catch (error) {
-    console.error('❌ [database.js] Error al crear Sequelize:', error.message);
-    console.error('❌ [database.js] Stack:', error.stack);
-    throw error;
-  }
-}
-}
 
 // Función para probar conexión
 const testConnection = async () => {
@@ -116,4 +89,3 @@ const testConnection = async () => {
 };
 
 module.exports = { sequelize, testConnection };
-
