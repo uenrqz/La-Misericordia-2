@@ -3,19 +3,22 @@ const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 
+// ===== RUTAS SOUT DESHABILITADAS =====
+// Descomentar cuando se configure SOUT_CLIENT_ID y SOUT_CLIENT_SECRET en .env
 /**
  * @route   GET /api/auth/sout
  * @desc    Redireccionar a la autenticación SOUT
  * @access  Public
  */
-router.get('/sout', authController.loginSout);
+// router.get('/sout', authController.loginSout);
 
 /**
  * @route   GET /api/auth/sout/callback
  * @desc    Callback desde SOUT tras autenticación exitosa
  * @access  Public
  */
-router.get('/sout/callback', authController.soutCallback);
+// router.get('/sout/callback', authController.soutCallback);
+// ======================================
 
 /**
  * @route   POST /api/auth/login

@@ -6,6 +6,8 @@ yarn-error.log
 
 # Variables de entorno
 .env
+.env.local
+.env.production
 
 # Directorio de distribución
 /dist
@@ -34,3 +36,11 @@ temp/
 
 # Cache de ESLint
 .eslintcache
+
+# Archivos subidos por usuarios
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
