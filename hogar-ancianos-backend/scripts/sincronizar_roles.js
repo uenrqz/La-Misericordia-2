@@ -16,7 +16,7 @@ const pool = new Pool({
 });
 
 async function sincronizarRoles() {
-  const client = await pool.connect();
+  const { pool } = require('../src/config/db');
   
   try {
     console.log('🔄 Sincronizando roles del sistema...');
