@@ -1,5 +1,5 @@
-const db = require('../config/db');
-const bcrypt = require('bcryptjs');
+const { pool } = require('../config/db');
+const bcrypt = require('bcrypt');
 
 /**
  * Obtener lista pública de usuarios (solo información básica para login)
@@ -10,7 +10,7 @@ exports.getUsuariosPublicos = async (req, res) => {
   try {
     // Obtener solo la información necesaria para el login (sin datos sensibles)
     // Eliminamos la condición de "activo" que no existe en la tabla
-    const { rows } = await db.query(
+    const { rows } = await pool.query(
       'SELECT id, username, nombre, apellido, rol FROM usuarios ORDER BY nombre, apellido'
     );
     
@@ -32,7 +32,7 @@ exports.getUsuariosPublicos = async (req, res) => {
  */
 exports.getUsuarios = async (req, res) => {
   try {
-    const { rows } = await db.query(
+    const { rows } = await pool.query(
       'SELECT id, username, nombre, apellido, email, rol, cambio_password_requerido, activo, created_at, updated_at FROM usuarios ORDER BY created_at DESC'
     );
     
@@ -60,7 +60,7 @@ exports.getUsuarioById = async (req, res) => {
       return res.status(403).json({ message: 'No tiene permisos para ver este usuario' });
     }
     
-    const { rows } = await db.query(
+    const { rows } = await pool.query(
       'SELECT id, username, nombre, apellido, email, rol, activo, cambio_password_requerido, created_at, updated_at FROM usuarios WHERE id = $1',
       [id]
     );
@@ -117,7 +117,7 @@ exports.createUsuario = async (req, res) => {
       params.push(email);
     }
     
-    const checkExistente = await db.query(query, params);
+    const checkExistente = await pool.query(query, params);
     
     if (checkExistente.rows.length > 0) {
       return res.status(400).json({ message: 'El nombre de usuario o email ya está en uso' });
@@ -144,7 +144,7 @@ exports.createUsuario = async (req, res) => {
         
         try {
           // Verificar si existe la tabla solicitudes_admin
-          const { rows: tableRows } = await db.query(`
+          const { rows: tableRows } = await pool.query(`
             SELECT EXISTS (
               SELECT 1 FROM information_schema.tables 
               WHERE table_name = 'solicitudes_admin'
@@ -159,13 +159,13 @@ exports.createUsuario = async (req, res) => {
             
             // Intentar insertar con los campos cambio_password_requerido y activo
             try {
-              const newUser = await db.query(
+              const newUser = await pool.query(
                 'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol',
                 [username, nombre, apellido, email || null, hashedPassword, tempRol, true, true]
               );
               
               // Crear la solicitud de administrador
-              await db.query(
+              await pool.query(
                 'INSERT INTO solicitudes_admin (usuario_id, solicitante_id, mensaje) VALUES ($1, $2, $3)',
                 [newUser.rows[0].id, req.user.id, `Usuario ${username} solicita permisos de administrador`]
               );
@@ -179,13 +179,13 @@ exports.createUsuario = async (req, res) => {
               console.error('Backend: Error al insertar con campos cambio_password_requerido y activo:', insertError);
               
               // Si falla, intentar sin esos campos
-              const newUser = await db.query(
+              const newUser = await pool.query(
                 'INSERT INTO usuarios (username, nombre, apellido, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, nombre, apellido, email, rol',
                 [username, nombre, apellido, email || null, hashedPassword, tempRol]
               );
               
               // Crear la solicitud de administrador
-              await db.query(
+              await pool.query(
                 'INSERT INTO solicitudes_admin (usuario_id, solicitante_id, mensaje) VALUES ($1, $2, $3)',
                 [newUser.rows[0].id, req.user.id, `Usuario ${username} solicita permisos de administrador`]
               );
@@ -212,7 +212,7 @@ exports.createUsuario = async (req, res) => {
     // Intentar insertar con diferentes combinaciones de campos según el esquema
     try {
       // Primero intentar con todos los campos
-      const result = await db.query(
+      const result = await pool.query(
         'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol, cambio_password_requerido, activo',
         [username, nombre, apellido, email || null, hashedPassword, rol, true, true]
       );
@@ -228,7 +228,7 @@ exports.createUsuario = async (req, res) => {
       
       try {
         // Si falla, intentar sin cambio_password_requerido ni activo
-        const result = await db.query(
+        const result = await pool.query(
           'INSERT INTO usuarios (username, nombre, apellido, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, nombre, apellido, email, rol',
           [username, nombre, apellido, email || null, hashedPassword, rol]
         );
@@ -282,7 +282,7 @@ exports.updateUsuario = async (req, res) => {
     }
     
     // Obtener el usuario actual para verificar que exista
-    const { rows: usuarios } = await db.query(
+    const { rows: usuarios } = await pool.query(
       'SELECT * FROM usuarios WHERE id = $1',
       [id]
     );
@@ -335,7 +335,7 @@ exports.updateUsuario = async (req, res) => {
       RETURNING id, username, nombre, apellido, email, rol, cambio_password_requerido, activo, created_at, updated_at
     `;
     
-    const result = await db.query(query, queryParams);
+    const result = await pool.query(query, queryParams);
     
     res.json({
       message: 'Usuario actualizado exitosamente',
@@ -370,7 +370,7 @@ exports.deleteUsuario = async (req, res) => {
     }
     
     // Verificar si el usuario existe
-    const { rows } = await db.query(
+    const { rows } = await pool.query(
       'SELECT * FROM usuarios WHERE id = $1',
       [id]
     );
@@ -380,7 +380,7 @@ exports.deleteUsuario = async (req, res) => {
     }
     
     // En lugar de eliminar físicamente, marcar como inactivo (soft delete)
-    await db.query(
+    await pool.query(
       'UPDATE usuarios SET activo = false WHERE id = $1',
       [id]
     );
@@ -411,7 +411,7 @@ exports.getSolicitudesAdmin = async (req, res) => {
     }
     
     // Obtener solicitudes pendientes con información de usuarios
-    const { rows } = await db.query(`
+    const { rows } = await pool.query(`
       SELECT sa.id, sa.usuario_id, sa.solicitante_id, sa.fecha_solicitud, sa.estado, sa.mensaje,
              u.username, u.nombre, u.apellido, u.email,
              s.username as solicitante_username, s.nombre as solicitante_nombre, s.apellido as solicitante_apellido
@@ -424,7 +424,7 @@ exports.getSolicitudesAdmin = async (req, res) => {
     
     // Para cada solicitud, verificar si el admin actual ya ha votado
     const solicitudesConEstado = await Promise.all(rows.map(async (solicitud) => {
-      const { rows: aprobaciones } = await db.query(
+      const { rows: aprobaciones } = await pool.query(
         'SELECT * FROM aprobaciones_admin WHERE solicitud_id = $1 AND admin_id = $2',
         [solicitud.id, req.user.id]
       );
@@ -462,7 +462,7 @@ exports.responderSolicitudAdmin = async (req, res) => {
     }
     
     // Verificar que la solicitud exista y esté pendiente
-    const { rows: solicitudes } = await db.query(
+    const { rows: solicitudes } = await pool.query(
       'SELECT * FROM solicitudes_admin WHERE id = $1 AND estado = $2',
       [solicitudId, 'pendiente']
     );
