@@ -1,8 +1,11 @@
 const axios = require('axios');
 const db = require('../config/db');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const soutConfig = require('../config/sout');
 const { generateToken } = require('../middlewares/auth.middleware');
+const { pool } = require('../config/db'); 
+const {jwt} = require('jsonwebtoken');
+
 
 /**
  * Controlador para el inicio de sesión con SOUT
@@ -97,76 +100,61 @@ exports.login = async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
     }
-
-    // Obtener usuario por nombre de usuario
+    
     console.log(`[Auth] Buscando usuario con username: ${username}`);
-    const { rows } = await db.query(
-      'SELECT id, username, password, nombre, apellido, rol, email, roles_adicionales FROM usuarios WHERE username = $1',
+    
+    // Buscar usuario por username - USANDO pool.query
+    const result = await pool.query(
+      'SELECT * FROM usuarios WHERE username = $1',
       [username]
     );
     
-    if (rows.length > 0) {
-      console.log(`[Auth] Usuario encontrado: ${username}, rol: ${rows[0].rol}, roles_adicionales: ${rows[0].roles_adicionales}`);
-    }
-
-    if (rows.length === 0) {
+    const user = result.rows[0];
+    
+    if (!user) {
+      console.log(`[Auth] Usuario no encontrado: ${username}`);
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
-
-    const userData = rows[0];
     
-    // Verificar la contraseña con bcrypt
-    let passwordIsValid = false;
+    // Verificar contraseña
+    const validPassword = await bcrypt.compare(password, user.password);
     
-    if (
-      userData.password.startsWith('$2a$') ||
-      userData.password.startsWith('$2b$') ||
-      userData.password.startsWith('$2y$')
-    ) {
-      // Formato bcrypt
-      passwordIsValid = bcrypt.compareSync(password, userData.password);
-    } else {
-      // Formato pgcrypto (mantener compatibilidad con usuarios existentes)
-      const cryptResult = await db.query(
-        'SELECT (password = crypt($1, password)) as is_valid FROM usuarios WHERE id = $2',
-        [password, userData.id]
-      );
-      passwordIsValid = cryptResult.rows[0]?.is_valid || false;
-    }
-    
-    if (!passwordIsValid) {
+    if (!validPassword) {
+      console.log(`[Auth] Contraseña inválida para usuario: ${username}`);
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
-
-    const token = generateToken(userData);
-
-    // Procesar roles adicionales si existen
-    let rolesAdicionales = [];
-    try {
-      if (userData.roles_adicionales) {
-        rolesAdicionales = JSON.parse(userData.roles_adicionales);
-      }
-    } catch (e) {
-      console.error('Error al parsear roles adicionales:', e);
-    }
+    
+    // Generar token JWT
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        username: user.username,
+        rol: user.rol 
+      },
+      process.env.JWT_SECRET || 'secreto_temporal',
+      { expiresIn: process.env.JWT_EXPIRATION || '8h' }
+    );
+    
+    console.log(`[Auth] Login exitoso para: ${username}`);
     
     res.json({
+      message: 'Login exitoso',
       token,
       user: {
-        id: userData.id,
-        username: userData.username,
-        nombre: userData.nombre,
-        apellido: userData.apellido,
-        rol: userData.rol,
-        email: userData.email,
-        roles_adicionales: rolesAdicionales
+        id: user.id,
+        username: user.username,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        email: user.email,
+        rol: user.rol
       }
     });
+    
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ 
-      message: 'Error en el servidor durante la autenticación',
-      error: error.message
+      message: 'Error interno del servidor',
+      error: error.message 
     });
   }
 };
