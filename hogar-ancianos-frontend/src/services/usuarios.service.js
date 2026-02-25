@@ -13,7 +13,7 @@ const usuariosService = {
   _cacheTimestamp: 0,
   _cacheTTL: 60000, // 1 minuto de tiempo de vida para la caché
   
-  getUsuariosPublicos: async () => {
+    getUsuariosPublicos: async () => {
     try {
       // Usar caché si está disponible y no ha expirado
       const now = Date.now();
@@ -23,18 +23,20 @@ const usuariosService = {
         return usuariosService._cachedPublicUsers;
       }
       
+      // Obtener la URL base del BFF desde las variables de entorno
+      const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+      const url = `${BFF_URL}/api/bff/usuarios/public`;
+      
       // Desactivar logs en producción para reducir consumo de memoria
       if (process.env.NODE_ENV !== 'production') {
-        console.log('📞 Llamando al servicio de usuarios públicos...');
+        console.log(`📞 Llamando a usuarios públicos: ${url}`);
       }
       
-      const fetchResponse = await fetch(`${window.location.hostname === 'localhost' 
-        ? 'http://localhost:4000/api/bff' 
-        : `http://${window.location.hostname}:4000/api/bff`}/usuarios/public`, {
-          // Optimizar la petición
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          cache: 'default'
+      const fetchResponse = await fetch(url, {
+        // Optimizar la petición
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'default'
       });
       
       if (!fetchResponse.ok) {
@@ -132,11 +134,9 @@ const usuariosService = {
       console.log('📡 Enviando petición al servidor...');
       
       // Usar fetch directamente para tener más control sobre la petición
-      const url = `${window.location.hostname === 'localhost' 
-        ? 'http://localhost:4000/api/bff' 
-        : `http://${window.location.hostname}:4000/api/bff`}/usuarios`;
-      
-      console.log('🔗 URL de petición:', url);
+      const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+      const baseURL = `${BFF_URL}/api/bff`;
+      const url = `${baseURL}/usuarios`;  
       
       const token = localStorage.getItem('token');
       if (!token) {
