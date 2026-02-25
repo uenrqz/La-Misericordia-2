@@ -130,7 +130,7 @@ exports.createUsuario = async (req, res) => {
     // y si se requiere la aprobación de otros administradores
     if (rol === 'admin') {
       // Contar cuántos administradores activos hay en el sistema
-      const { rows: adminRows } = await db.query(
+      const { rows: adminRows } = await pool.query(
         'SELECT COUNT(*) FROM usuarios WHERE rol = $1',
         ['admin']
       );
@@ -472,7 +472,7 @@ exports.responderSolicitudAdmin = async (req, res) => {
     }
     
     // Verificar que el admin no haya votado ya
-    const { rows: aprobacionesExistentes } = await db.query(
+    const { rows: aprobacionesExistentes } = await pool.query(
       'SELECT * FROM aprobaciones_admin WHERE solicitud_id = $1 AND admin_id = $2',
       [solicitudId, req.user.id]
     );
@@ -482,7 +482,7 @@ exports.responderSolicitudAdmin = async (req, res) => {
     }
     
     // Registrar la aprobación o rechazo
-    await db.query(
+    await pool.query(
       'INSERT INTO aprobaciones_admin (solicitud_id, admin_id, aprobado, comentario) VALUES ($1, $2, $3, $4)',
       [solicitudId, req.user.id, aprobado, comentario || '']
     );
@@ -491,14 +491,14 @@ exports.responderSolicitudAdmin = async (req, res) => {
     // Pero verificamos si fue rechazada por este administrador
     if (!aprobado) {
       // Si un admin rechaza, automáticamente rechazamos la solicitud
-      await db.query(
+      await pool.query(
         'UPDATE solicitudes_admin SET estado = $1 WHERE id = $2',
         ['rechazado', solicitudId]
       );
     }
     
     // Verificar estado actual después de la votación
-    const { rows: solicitudActualizada } = await db.query(
+    const { rows: solicitudActualizada } = await pool.query(
       'SELECT * FROM solicitudes_admin WHERE id = $1',
       [solicitudId]
     );
@@ -542,7 +542,7 @@ exports.cambiarPassword = async (req, res) => {
     }
     
     // Obtener la información del usuario
-    const { rows: usuarios } = await db.query(
+    const { rows: usuarios } = await pool.query(
       'SELECT * FROM usuarios WHERE id = $1',
       [id]
     );
@@ -565,7 +565,7 @@ exports.cambiarPassword = async (req, res) => {
     const hashedPassword = bcrypt.hashSync(passwordNueva, 10);
     
     // Actualizar la contraseña y marcar que ya no necesita cambio
-    await db.query(
+    await pool.query(
       'UPDATE usuarios SET password = $1, cambio_password_requerido = false, ultima_actualizacion_password = NOW() WHERE id = $2',
       [hashedPassword, id]
     );
@@ -601,7 +601,7 @@ exports.toggleEstadoUsuario = async (req, res) => {
     }
     
     // Actualizar estado
-    await db.query(
+    await pool.query(
       'UPDATE usuarios SET activo = $1 WHERE id = $2',
       [activo, id]
     );
