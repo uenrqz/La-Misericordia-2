@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { pool } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
 
@@ -45,7 +45,7 @@ exports.getResidentes = async (req, res) => {
     // Ordenar por nombre
     query += ' ORDER BY nombre ASC';
 
-    const result = await db.query(query, params);
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error('Error al obtener residentes:', err);
@@ -60,7 +60,7 @@ exports.getResidenteById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await db.query(
+    const result = await pool.query(
       `SELECT id, nombre, apellido, fecha_nacimiento, 
       EXTRACT(YEAR FROM AGE(fecha_nacimiento)) as edad,
       direccion_anterior, fecha_ingreso, estado_salud, medicamentos, alergias, 
@@ -132,7 +132,7 @@ exports.createResidente = async (req, res) => {
       telefono_emergencia || null
     ];
     
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error al crear residente:', err);
@@ -153,7 +153,7 @@ exports.updateResidente = async (req, res) => {
     } = req.body;
     
     // Verificar si el residente existe
-    const checkResult = await db.query('SELECT * FROM ancianos WHERE id = $1', [id]);
+    const checkResult = await pool.query('SELECT * FROM ancianos WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
@@ -227,7 +227,7 @@ exports.updateResidente = async (req, res) => {
       RETURNING *
     `;
     
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error al actualizar residente:', err);
@@ -243,12 +243,12 @@ exports.deleteResidente = async (req, res) => {
     const { id } = req.params;
     
     // Verificar si el residente existe
-    const checkResult = await db.query('SELECT * FROM ancianos WHERE id = $1', [id]);
+    const checkResult = await pool.query('SELECT * FROM ancianos WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
     
-    await db.query('DELETE FROM ancianos WHERE id = $1', [id]);
+    await pool.query('DELETE FROM ancianos WHERE id = $1', [id]);
     res.json({ message: `Residente con ID ${id} eliminado correctamente` });
   } catch (err) {
     console.error('Error al eliminar residente:', err);
@@ -264,7 +264,7 @@ exports.uploadPhoto = async (req, res) => {
     const { id } = req.params;
     
     // Verificar si el residente existe
-    const checkResult = await db.query('SELECT * FROM ancianos WHERE id = $1', [id]);
+    const checkResult = await pool.query('SELECT * FROM ancianos WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       // Si hay un archivo cargado pero el residente no existe, eliminar el archivo
       if (req.file) {
@@ -296,7 +296,7 @@ exports.uploadPhoto = async (req, res) => {
     const photoUrl = `${baseUrl}/uploads/${req.file.filename}`;
     
     // Actualizar la URL de la foto en la base de datos
-    const result = await db.query(
+    const result = await pool.query(
       'UPDATE ancianos SET foto_url = $1 WHERE id = $2 RETURNING *',
       [photoUrl, id]
     );
@@ -319,7 +319,7 @@ exports.deletePhoto = async (req, res) => {
     const { id } = req.params;
     
     // Verificar si el residente existe
-    const checkResult = await db.query('SELECT * FROM ancianos WHERE id = $1', [id]);
+    const checkResult = await pool.query('SELECT * FROM ancianos WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
@@ -340,7 +340,7 @@ exports.deletePhoto = async (req, res) => {
     }
     
     // Actualizar la URL de la foto en la base de datos a NULL
-    const result = await db.query(
+    const result = await pool.query(
       'UPDATE ancianos SET foto_url = NULL WHERE id = $1 RETURNING *',
       [id]
     );
@@ -360,7 +360,7 @@ exports.deletePhoto = async (req, res) => {
  */
 exports.getStats = async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await pool.query(`
       SELECT 
         COUNT(*) as total,
         COUNT(CASE WHEN estado_salud = 'Estable' THEN 1 END) as activos,
@@ -382,7 +382,7 @@ exports.getOcupacion = async (req, res) => {
   try {
     const totalCapacidad = 50; // Capacidad total del hogar
     
-    const result = await db.query(`
+    const result = await pool.query(`
       SELECT COUNT(*) as ocupados
       FROM ancianos
       WHERE estado_salud = 'Estable'
@@ -407,7 +407,7 @@ exports.getOcupacion = async (req, res) => {
  */
 exports.getSignosVitalesRecientes = async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await pool.query(`
       SELECT sv.*, a.nombre, a.apellido
       FROM signos_vitales sv
       JOIN ancianos a ON sv.anciano_id = a.id

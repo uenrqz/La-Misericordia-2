@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
+const { pool } = require('../config/db');
 
 // Servicios
 const recibosDonacionService = require('../services/facturacion-sat.service');
@@ -154,7 +154,7 @@ exports.obtenerDonaciones = async (req, res) => {
     
     // Contar el total de registros que coinciden con el filtro
     const countQuery = `SELECT COUNT(*) as total FROM (${sqlQuery}) AS filtered_donaciones`;
-    const totalResult = await query(countQuery, params);
+    const totalResult = await pool.query(countQuery, params);
     const total = parseInt(totalResult.rows[0].total);
     
     // Agregar ordenamiento y paginación a la consulta original
@@ -163,7 +163,7 @@ exports.obtenerDonaciones = async (req, res) => {
     params.push((page - 1) * parseInt(limit));
     
     // Ejecutar la consulta paginada
-    const result = await query(sqlQuery, params);
+    const result = await pool.query(sqlQuery, params);
     
     res.status(200).json({
       total,
@@ -184,7 +184,7 @@ exports.obtenerDonacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    const result = await pool.query('SELECT * FROM donaciones WHERE id = $1', [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Donación no encontrada' });
@@ -299,7 +299,7 @@ exports.crearDonacion = async (req, res) => {
     `;
     
     // Ejecutar la consulta
-    const result = await query(sqlQuery, valores);
+    const result = await pool.query(sqlQuery, valores);
     const nuevaDonacion = result.rows[0];
     
     // Si se solicita generar recibo de donación
@@ -325,7 +325,7 @@ exports.actualizarDonacion = async (req, res) => {
     const datosActualizados = { ...req.body };
     
     // Buscar la donación existente
-    const donacionResult = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    const donacionResult = await pool.query('SELECT * FROM donaciones WHERE id = $1', [id]);
     
     if (donacionResult.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Donación no encontrada' });
@@ -410,7 +410,7 @@ exports.actualizarDonacion = async (req, res) => {
       RETURNING *
     `;
     
-    const result = await query(sqlQuery, valores);
+    const result = await pool.query(sqlQuery, valores);
     const donacionActualizada = result.rows[0];
     
     // Si se solicita generar recibo de donación
@@ -435,7 +435,7 @@ exports.eliminarDonacion = async (req, res) => {
     const { id } = req.params;
     
     // Buscar la donación
-    const donacionResult = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    const donacionResult = await pool.query('SELECT * FROM donaciones WHERE id = $1', [id]);
     
     if (donacionResult.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Donación no encontrada' });
@@ -460,7 +460,7 @@ exports.eliminarDonacion = async (req, res) => {
     }
     
     // Eliminar la donación
-    await query('DELETE FROM donaciones WHERE id = $1', [id]);
+    await pool.query('DELETE FROM donaciones WHERE id = $1', [id]);
     
     res.status(200).json({ mensaje: 'Donación eliminada correctamente' });
     
@@ -478,7 +478,7 @@ exports.generarReciboDonacion = async (req, res) => {
     const { id } = req.params;
     
     // Buscar la donación
-    const donacionResult = await query('SELECT * FROM donaciones WHERE id = $1', [id]);
+    const donacionResult = await pool.query('SELECT * FROM donaciones WHERE id = $1', [id]);
     
     if (donacionResult.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Donación no encontrada' });
@@ -566,7 +566,7 @@ async function generarReciboDonacion(donacion, res) {
       RETURNING *
     `;
     
-    const updateResult = await query(updateQuery, [
+    const updateResult = await pool.query(updateQuery, [
       resultado.recibo.serie,
       resultado.recibo.numero,
       resultado.recibo.uuid,
