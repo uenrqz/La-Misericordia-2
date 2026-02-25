@@ -27,7 +27,9 @@ ALTER TABLE usuarios
 ADD COLUMN IF NOT EXISTS cambio_password_requerido BOOLEAN DEFAULT FALSE,
 ADD COLUMN IF NOT EXISTS ultima_actualizacion_password TIMESTAMP DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS intentos_login INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
+ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
 
 -- 3. Crear tabla solicitudes_admin si no existe
 CREATE TABLE IF NOT EXISTS solicitudes_admin (
@@ -82,6 +84,10 @@ EXECUTE FUNCTION verificar_aprobacion_administrador();
 
 -- 7. Actualizar usuarios existentes (no requerir cambio de password para usuarios ya creados)
 UPDATE usuarios SET cambio_password_requerido = FALSE WHERE cambio_password_requerido IS NULL;
+
+-- 8. Actualizar created_at para usuarios existentes que no lo tienen
+UPDATE usuarios SET created_at = fecha_registro WHERE created_at IS NULL AND fecha_registro IS NOT NULL;
+UPDATE usuarios SET created_at = NOW() WHERE created_at IS NULL;
 
 COMMIT;
 
