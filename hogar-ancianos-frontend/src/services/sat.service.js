@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 // URL base de la API para servicios de donación/SAT
-const API_URL = 'http://localhost:4000/api/donaciones';
+// Usar la misma configuración que otros servicios (BFF)
+const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+const API_URL = `${BFF_URL}/api/donaciones`;
+
+console.log('🔧 SAT Service - URL configurada:', API_URL);
 
 /**
  * Inicia sesión con el sistema SAT para facturación electrónica
