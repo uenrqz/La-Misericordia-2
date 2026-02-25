@@ -2,10 +2,11 @@ import axios from 'axios';
 import { fetchWithErrorHandling, recuperarDeErrores500 } from '../utils/errorHandler';
 
 // Configuración base para las peticiones API
-// Obtenemos la URL base del entorno, con fallback a producción
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:4000/api/bff' 
-  : `${window.location.protocol}//${window.location.hostname}/api/bff`;
+// Obtener la URL del BFF desde variables de entorno con fallback a producción
+const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+const API_URL = `${BFF_URL}/api/bff`;
+
+console.log('🔧 API Service - URL configurada:', API_URL);
 
 // Configuración de CORS
 const CORS_CONFIG = {

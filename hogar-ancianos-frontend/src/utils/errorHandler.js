@@ -188,7 +188,7 @@ export async function recuperarDeErrores500() {
     // 1. Verificar conectividad con el BFF usando la ruta de estado
     console.log('Verificando conexión con el BFF...');
     const baseUrl = window.location.hostname === 'localhost' 
-      ? 'http://localhost:4000/api/bff' 
+      ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
       : `${window.location.protocol}//${window.location.hostname}/api/bff`;
     
     console.log(`URL de verificación del BFF: ${baseUrl}/status`);
@@ -218,7 +218,7 @@ export async function recuperarDeErrores500() {
     if (token) {
       try {
         const baseUrl = window.location.hostname === 'localhost' 
-          ? 'http://localhost:4000/api/bff' 
+          ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
           : `${window.location.protocol}//${window.location.hostname}/api/bff`;
           
         const tokenCheck = await fetch(`${baseUrl}/auth/verify`, {

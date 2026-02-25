@@ -10,7 +10,7 @@ const diagnosticService = {
    */
   checkBffConnection: async () => {
     try {
-      const response = await fetchWithErrorHandling('http://localhost:4000/api/bff/status', { 
+      const response = await fetchWithErrorHandling('${import.meta.env.VITE_BFF_URL}/api/bff/status', { 
         method: 'GET',
         timeout: 5000,
         maxRetries: 1
@@ -50,7 +50,7 @@ const diagnosticService = {
    */
   checkBackendConnection: async () => {
     try {
-      const response = await fetchWithErrorHandling('http://localhost:4000/api/bff/diagnostic/backend-status', { 
+      const response = await fetchWithErrorHandling('${import.meta.env.VITE_BFF_URL}/api/bff/diagnostic/backend-status', { 
         method: 'GET',
         timeout: 5000,
         maxRetries: 1

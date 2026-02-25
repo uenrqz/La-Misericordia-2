@@ -95,7 +95,7 @@ export const SystemProvider = ({ children }) => {
       
       // URL dinámica basada en el entorno
       const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:4000/api/bff' 
+        ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
         : `${window.location.protocol}//${window.location.hostname}/api/bff`;
       
       console.log(`Consultando estado del sistema en: ${baseUrl}/status`);
@@ -153,7 +153,7 @@ export const SystemProvider = ({ children }) => {
       
       // URL dinámica basada en el entorno
       const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:4000/api/bff' 
+        ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
         : `${window.location.protocol}//${window.location.hostname}/api/bff`;
       
       const response = await fetch(`${baseUrl}/status`, {
