@@ -77,7 +77,7 @@ app.get('/health', (req, res) => {
 
 // Ruta de estado simple para verificación de cliente (pública, sin autenticación)
 // Esta ruta responde a cualquier origen para evitar problemas de CORS durante el diagnóstico
-app.get('/api/bff/status', (req, res) => {
+app.get('/api/bff/status', async (req, res) => {
   // Log para debug
   console.log('Solicitud recibida en /api/bff/status desde', req.get('origin') || 'origen desconocido');
   
@@ -85,12 +85,42 @@ app.get('/api/bff/status', (req, res) => {
   res.header('Access-Control-Allow-Origin', req.get('origin') || '*');
   res.header('Access-Control-Allow-Credentials', 'true');
   
+  // Verificar conexión con el backend
+  const backendStatus = { status: 'UNKNOWN', message: 'No verificado' };
+  const backendUrl = process.env.API_URL || 'http://localhost:3000';
+  
+  try {
+    const axios = require('axios');
+    const backendResponse = await axios.get(`${backendUrl}/health`, { 
+      timeout: 5000 
+    });
+    backendStatus.status = 'UP';
+    backendStatus.message = 'Backend responde correctamente';
+    backendStatus.url = backendUrl;
+  } catch (error) {
+    backendStatus.status = 'DOWN';
+    backendStatus.message = error.code === 'ECONNREFUSED' 
+      ? 'Backend no responde (servicio caído o suspendido)' 
+      : error.code === 'ETIMEDOUT' 
+        ? 'Backend tardó demasiado en responder' 
+        : `Error: ${error.message}`;
+    backendStatus.url = backendUrl;
+    backendStatus.error = error.code || 'UNKNOWN';
+    
+    console.error('[BFF Status] ❌ Error al verificar backend:', {
+      url: backendUrl,
+      code: error.code,
+      message: error.message
+    });
+  }
+  
   res.status(200).json({ 
     status: 'online', 
     message: 'BFF - La Misericordia en funcionamiento',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    origin: req.get('origin') || 'unknown'
+    origin: req.get('origin') || 'unknown',
+    backend: backendStatus
   });
 });
 

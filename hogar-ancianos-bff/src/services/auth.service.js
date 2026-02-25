@@ -25,14 +25,19 @@ class AuthService {
       }
       
       console.log(`[BFF Auth] Enviando solicitud de autenticación al backend para: ${loginCredentials.username}`);
+      console.log(`[BFF Auth] URL del backend: ${process.env.API_URL || 'http://localhost:3000'}`);
       
       const response = await apiClient.post('/api/auth/login', loginCredentials);
+      
       if (!response.data || !response.data.token) {
+        console.error('[BFF Auth] Respuesta inválida del backend:', response.data);
         throw {
           status: 401,
           message: 'Respuesta de autenticación inválida del backend'
         };
       }
+      
+      console.log('[BFF Auth] Autenticación exitosa desde el backend');
       return response.data;
     } catch (error) {
       // Si ya es un error personalizado, lo lanzamos directamente
@@ -42,20 +47,37 @@ class AuthService {
       
       // Determinamos el tipo de error basado en la respuesta o el código
       const status = error.status || 
-                     (error.response ? error.response.status : 401);
+                     (error.response ? error.response.status : 500);
       
       let message = 'Error de autenticación';
+      const errorCode = error.code;
+      
+      // Log detallado del error para debugging
+      console.error('[BFF Auth] Error en autenticación:', {
+        code: errorCode,
+        status: status,
+        message: error.message,
+        responseData: error.response?.data,
+        apiUrl: process.env.API_URL
+      });
+      
       if (error.response && error.response.data && error.response.data.message) {
         message = error.response.data.message;
-      } else if (error.code === 'ECONNREFUSED') {
-        message = 'No se pudo conectar al servidor de autenticación';
-      } else if (error.code === 'ECONNABORTED') {
-        message = 'Tiempo de espera agotado al intentar autenticar';
+      } else if (errorCode === 'ECONNREFUSED') {
+        message = 'No se pudo conectar al servidor de autenticación. Verifica que el backend esté en línea.';
+        console.error('[BFF Auth] ❌ Backend no responde. Verifica API_URL:', process.env.API_URL);
+      } else if (errorCode === 'ECONNABORTED' || errorCode === 'ETIMEDOUT') {
+        message = 'Tiempo de espera agotado al intentar autenticar. El backend puede estar lento o suspendido.';
+        console.error('[BFF Auth] ⏱️ Timeout al conectar con el backend');
+      } else if (errorCode === 'ENOTFOUND') {
+        message = 'No se encontró el servidor de autenticación. Verifica la URL del backend.';
+        console.error('[BFF Auth] 🔍 Servidor no encontrado. API_URL:', process.env.API_URL);
       }
       
       throw {
         status,
         message,
+        code: errorCode,
         data: error.data || (error.response ? error.response.data : null)
       };
     }

@@ -9,11 +9,17 @@ const authService = require('../services/auth.service');
  */
 router.post('/login', async (req, res) => {
   try {
+    console.log('[BFF Auth Route] Procesando petición de login para:', req.body.username);
+    
     // Autenticar con el backend
     const backendAuth = await authService.login(req.body);
     
+    console.log('[BFF Auth Route] Autenticación exitosa con backend');
+    
     // Generar token del BFF
     const bffToken = authService.generateBffToken(backendAuth);
+    
+    console.log('[BFF Auth Route] Token BFF generado exitosamente');
     
     // Devolver respuesta con nuevo token y datos de usuario
     res.json({
@@ -21,9 +27,26 @@ router.post('/login', async (req, res) => {
       user: backendAuth.user
     });
   } catch (error) {
+    console.error('[BFF Auth Route] Error en login:', {
+      status: error.status || 500,
+      message: error.message,
+      data: error.data,
+      code: error.code
+    });
+    
+    // Mejorar el mensaje de error para el cliente
+    let clientMessage = error.message || 'Error de autenticación';
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      clientMessage = 'El servidor de autenticación no está disponible. Por favor intente más tarde.';
+    } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      clientMessage = 'El servidor tardó demasiado en responder. Por favor intente nuevamente.';
+    }
+    
     res.status(error.status || 500).json({
-      message: error.message || 'Error de autenticación',
-      data: error.data
+      message: clientMessage,
+      data: error.data,
+      code: error.code
     });
   }
 });
