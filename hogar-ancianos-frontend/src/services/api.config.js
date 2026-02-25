@@ -1,10 +1,11 @@
 import axios from 'axios';
 
+// Obtener la URL base desde variables de entorno
+const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+
 // Configuración base para las peticiones HTTP
 const apiClient = axios.create({
-  baseURL: window.location.hostname === 'localhost' 
-    ? 'http://localhost:4000/api/bff' 
-    : `http://${window.location.hostname}:4000/api/bff`,
+  baseURL: `${BFF_URL}/api/bff`,
   headers: {
     'Content-Type': 'application/json'
   },
