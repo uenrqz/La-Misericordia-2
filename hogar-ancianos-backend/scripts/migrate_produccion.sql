@@ -51,7 +51,40 @@ CREATE TABLE IF NOT EXISTS aprobaciones_admin (
     comentario TEXT
 );
 
--- 5. Crear función para verificar aprobación de administrador
+-- 5. Crear tabla donaciones si no existe
+CREATE TABLE IF NOT EXISTS donaciones (
+    id SERIAL PRIMARY KEY,
+    tipo_donacion VARCHAR(50) NOT NULL CHECK (tipo_donacion IN ('monetaria', 'especie', 'servicios')),
+    monto NUMERIC(10, 2),
+    valor_estimado NUMERIC(10, 2),
+    donante_nombre VARCHAR(255) NOT NULL,
+    donante_nit VARCHAR(50),
+    donante_direccion TEXT,
+    descripcion TEXT,
+    metodo_pago VARCHAR(50) CHECK (metodo_pago IN ('efectivo', 'cheque', 'transferencia', 'tarjeta', 'otro')),
+    detalle_especie TEXT,
+    detalle_servicio TEXT,
+    notas TEXT,
+    fecha_donacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    comprobante VARCHAR(255),
+    estado VARCHAR(50) DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'Procesada', 'Anulada')),
+    recibo_generado BOOLEAN DEFAULT FALSE,
+    serie_recibo VARCHAR(50),
+    numero_recibo VARCHAR(50),
+    uuid_recibo VARCHAR(50),
+    url_recibo VARCHAR(255),
+    fecha_recibo TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Crear índice para búsquedas rápidas por tipo de donación
+CREATE INDEX IF NOT EXISTS idx_donaciones_tipo ON donaciones(tipo_donacion);
+
+-- Crear índice para búsquedas por fecha de donación
+CREATE INDEX IF NOT EXISTS idx_donaciones_fecha ON donaciones(fecha_donacion);
+
+-- 6. Crear función para verificar aprobación de administrador
 CREATE OR REPLACE FUNCTION verificar_aprobacion_administrador() RETURNS TRIGGER AS $$
 DECLARE
     total_admins INTEGER;
@@ -75,14 +108,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6. Crear trigger si no existe
+-- 7. Crear trigger si no existe
 DROP TRIGGER IF EXISTS trigger_verificar_aprobacion_admin ON aprobaciones_admin;
 CREATE TRIGGER trigger_verificar_aprobacion_admin
 AFTER INSERT ON aprobaciones_admin
 FOR EACH ROW
 EXECUTE FUNCTION verificar_aprobacion_administrador();
 
--- 7. Actualizar usuarios existentes (no requerir cambio de password para usuarios ya creados)
+-- 8. Actualizar usuarios existentes (no requerir cambio de password para usuarios ya creados)
 UPDATE usuarios SET cambio_password_requerido = FALSE WHERE cambio_password_requerido IS NULL;
 
 -- 8. Actualizar created_at para usuarios existentes que no lo tienen
