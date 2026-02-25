@@ -93,10 +93,9 @@ export const SystemProvider = ({ children }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      // URL dinámica basada en el entorno
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
-        : `${window.location.protocol}//${window.location.hostname}/api/bff`;
+      // URL del BFF desde variables de entorno
+      const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+      const baseUrl = `${BFF_URL}/api/bff`;
       
       console.log(`Consultando estado del sistema en: ${baseUrl}/status`);
       

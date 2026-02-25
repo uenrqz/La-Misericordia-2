@@ -187,9 +187,8 @@ export async function recuperarDeErrores500() {
   try {
     // 1. Verificar conectividad con el BFF usando la ruta de estado
     console.log('Verificando conexión con el BFF...');
-    const baseUrl = window.location.hostname === 'localhost' 
-      ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
-      : `${window.location.protocol}//${window.location.hostname}/api/bff`;
+    const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+    const baseUrl = `${BFF_URL}/api/bff`;
     
     console.log(`URL de verificación del BFF: ${baseUrl}/status`);
       
@@ -217,9 +216,8 @@ export async function recuperarDeErrores500() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const baseUrl = window.location.hostname === 'localhost' 
-          ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
-          : `${window.location.protocol}//${window.location.hostname}/api/bff`;
+        const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+        const baseUrl = `${BFF_URL}/api/bff`;
           
         const tokenCheck = await fetch(`${baseUrl}/auth/verify`, {
           method: 'GET',

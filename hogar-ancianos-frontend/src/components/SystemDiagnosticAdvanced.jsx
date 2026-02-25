@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useSystem } from '../contexts/SystemContext';
 import tokenRefreshManager from '../utils/tokenRefreshManager';
 
+// Configuración de URL del BFF
+const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+const API_BASE_URL = `${BFF_URL}/api/bff`;
+
 /**
  * Componente de Diagnóstico Avanzado del Sistema
  * Muestra información detallada sobre el estado del sistema, conectividad,
@@ -82,7 +86,7 @@ const SystemDiagnosticAdvanced = () => {
   const updateConnectivityStatus = async () => {
     try {
       const startTime = Date.now();
-      const response = await fetch(`${window.location.protocol}//${window.location.hostname}:4000/api/bff/status`, {
+      const response = await fetch(`${API_BASE_URL}/status`, {
         method: 'GET',
         cache: 'no-store'
       });
@@ -154,7 +158,7 @@ const SystemDiagnosticAdvanced = () => {
 
   const testConnectivity = async () => {
     try {
-      const response = await fetch(`${window.location.protocol}//${window.location.hostname}:4000/api/bff/status`);
+      const response = await fetch(`${API_BASE_URL}/status`);
       return {
         name: 'Conectividad BFF',
         passed: response.ok,
@@ -183,7 +187,7 @@ const SystemDiagnosticAdvanced = () => {
     }
 
     try {
-      const response = await fetch(`${window.location.protocol}//${window.location.hostname}:4000/api/bff/auth/verify`, {
+      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
