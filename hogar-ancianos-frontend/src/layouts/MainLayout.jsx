@@ -123,8 +123,8 @@ const MainLayout = () => {
   const renderMenuItems = () => {
     const user = currentUser || authService.getCurrentUser();
     const role = user?.role || user?.rol || 'admin';
-    
-    return (
+  
+  return (
       <ul className="space-y-2 font-medium">
         <li>
           <Link
@@ -367,7 +367,7 @@ const MainLayout = () => {
       >
         <div className="flex items-center justify-between p-4 border-b">
           <img src={logo} alt="Logo La Misericordia" className="h-8" />
-          <button
+          <button 
             onClick={toggleSidebar}
             className="p-2 rounded-lg hover:bg-gray-100 flex items-center justify-center"
             style={{ minWidth: '40px', minHeight: '40px' }}
@@ -409,8 +409,8 @@ const MainLayout = () => {
       >
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center">
-            <button
-              onClick={toggleSidebar}
+        <button
+          onClick={toggleSidebar}
               className={`p-2 rounded-lg hover:bg-gray-100 mr-2 flex items-center justify-center transition-colors duration-200 ${
                 !isSidebarOpen ? 'bg-primary-50 text-primary-600' : ''
               }`}
@@ -432,11 +432,11 @@ const MainLayout = () => {
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
               </svg>
-            </button>
+        </button>
             <h1 className="text-xl font-semibold">La Misericordia</h1>
-          </div>
-          
-          <div className="flex items-center">
+      </div>
+      
+            <div className="flex items-center">
             {/* Indicador de estado del sistema */}
             <button 
               onClick={() => setShowStatusModal(true)} 
@@ -449,7 +449,7 @@ const MainLayout = () => {
                 <i className="fas fa-circle text-red-500 mr-1"></i>
               )}
               <span className="hidden md:inline text-sm">Estado</span>
-            </button>
+              </button>
             
             {currentUser && (
               <div className="flex items-center">
@@ -462,7 +462,7 @@ const MainLayout = () => {
                 >
                   {currentUser?.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'U'}
                 </div>
-              </div>
+            </div>
             )}
           </div>
         </header>

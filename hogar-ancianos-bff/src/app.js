@@ -12,9 +12,10 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
       process.env.FRONTEND_URL || 'https://lamisericordia2.com',
       process.env.FRONTEND_DOMAIN || 'https://app.lamisericordia2.com',
       'http://localhost:5174', // Añadido para pruebas locales en producción
-      'http://127.0.0.1:5174'
+      'http://127.0.0.1:5174',
+      'http://192.168.0.10:5174' // IP local para acceso desde otros dispositivos
     ]
-  : ['http://localhost:5174', 'http://127.0.0.1:5174'];
+  : ['http://localhost:5174', 'http://127.0.0.1:5174', 'http://192.168.0.10:5174'];
 
 console.log(`[BFF] Iniciando en modo ${process.env.NODE_ENV || 'development'}`);
 console.log(`[BFF] Orígenes CORS permitidos: ${allowedOrigins.join(', ')}`);
@@ -186,10 +187,8 @@ app.use((req, res) => {
   });
 });
 
-// Puerto
+// Puerto e iniciar el servidor con manejo de errores
 const PORT = process.env.PORT || 4000;
-
-// Iniciar el servidor con manejo de errores
 const server = app.listen(PORT, () => {
   console.log(`BFF ejecutándose en el puerto ${PORT}`);
   console.log(`Conectado al backend en: ${process.env.API_URL || 'http://localhost:3000'}`);
@@ -198,40 +197,7 @@ const server = app.listen(PORT, () => {
   process.exit(1);
 });
 
-// Middleware global para manejar errores 500
-app.use((err, req, res, next) => {
-  console.error('Error interno del servidor:', err);
-  
-  // Asegurar que no se envíe un error 500 al cliente
-  res.status(200).json({
-    success: false,
-    error: {
-      message: 'Se produjo un error en el servidor',
-      code: 'SERVER_ERROR',
-      timestamp: new Date().toISOString()
-    },
-    // En desarrollo podemos enviar más detalles
-    ...(process.env.NODE_ENV === 'development' ? {
-      errorDetails: {
-        message: err.message,
-        stack: err.stack,
-        path: req.path
-      }
-    } : {})
-  });
-});
-
-// Middleware para rutas no encontradas (404)
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: {
-      message: `Ruta no encontrada: ${req.originalUrl}`,
-      code: 'NOT_FOUND',
-      statusCode: 404
-    }
-  });
-});
+// Nota: Los manejadores globales ya fueron declarados arriba
 
 // Manejar señales de terminación para un cierre limpio
 process.on('SIGTERM', gracefulShutdown);
@@ -239,10 +205,15 @@ process.on('SIGINT', gracefulShutdown);
 
 function gracefulShutdown() {
   console.log('Cerrando el servidor BFF...');
-  server.close(() => {
-    console.log('Servidor BFF cerrado.');
+  if (server && server.close) {
+    server.close(() => {
+      console.log('Servidor BFF cerrado.');
+      process.exit(0);
+    });
+  } else {
+    console.log('Servidor BFF no estaba en ejecución.');
     process.exit(0);
-  });
+  }
   
   // Forzar el cierre si no se completa en 10 segundos
   setTimeout(() => {

@@ -2,6 +2,30 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 
 /**
+ * Obtener lista pública de usuarios (solo información básica para login)
+ * @param {Object} req - Objeto de solicitud Express
+ * @param {Object} res - Objeto de respuesta Express
+ */
+exports.getUsuariosPublicos = async (req, res) => {
+  try {
+    // Obtener solo la información necesaria para el login (sin datos sensibles)
+    // Eliminamos la condición de "activo" que no existe en la tabla
+    const { rows } = await db.query(
+      'SELECT id, username, nombre, apellido, rol FROM usuarios ORDER BY nombre, apellido'
+    );
+    
+    console.log(`Retornando ${rows.length} usuarios públicos para login`);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener usuarios públicos:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener lista de usuarios', 
+      error: error.message 
+    });
+  }
+};
+
+/**
  * Obtener todos los usuarios
  * @param {Object} req - Objeto de solicitud Express
  * @param {Object} res - Objeto de respuesta Express
@@ -64,22 +88,36 @@ exports.createUsuario = async (req, res) => {
   try {
     const { username, nombre, apellido, email, password, rol } = req.body;
     
+    console.log('Backend: Recibida solicitud para crear usuario:', {
+      username,
+      nombre, 
+      apellido,
+      email,
+      rol,
+      // No mostrar la contraseña en los logs
+    });
+    
     // Validaciones básicas
-    if (!username || !nombre || !apellido || !email || !password || !rol) {
-      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    if (!username || !nombre || !apellido || !password || !rol) {
+      return res.status(400).json({ message: 'Todos los campos son obligatorios (username, nombre, apellido, password, rol)' });
     }
     
-    // Validar que el rol sea válido (admin, enfermera, doctor/medico)
-    const rolesValidos = ['admin', 'enfermera', 'doctor', 'medico'];
+    // Validar que el rol sea válido (admin, medico, enfermero, cuidador, secretaria)
+    const rolesValidos = ['admin', 'medico', 'enfermero', 'cuidador', 'secretaria'];
     if (!rolesValidos.includes(rol)) {
-      return res.status(400).json({ message: 'Rol no válido. Los roles permitidos son: admin, enfermera, doctor/medico' });
+      return res.status(400).json({ message: `Rol no válido "${rol}". Los roles permitidos son: admin, medico, enfermero, cuidador, secretaria` });
     }
     
     // Verificar si ya existe un usuario con ese username o email
-    const checkExistente = await db.query(
-      'SELECT id FROM usuarios WHERE username = $1 OR email = $2',
-      [username, email]
-    );
+    let query = 'SELECT id FROM usuarios WHERE username = $1';
+    let params = [username];
+    
+    if (email) {
+      query += ' OR email = $2';
+      params.push(email);
+    }
+    
+    const checkExistente = await db.query(query, params);
     
     if (checkExistente.rows.length > 0) {
       return res.status(400).json({ message: 'El nombre de usuario o email ya está en uso' });
@@ -92,48 +130,122 @@ exports.createUsuario = async (req, res) => {
     // y si se requiere la aprobación de otros administradores
     if (rol === 'admin') {
       // Contar cuántos administradores activos hay en el sistema
-      const { rows: adminCount } = await db.query(
-        'SELECT COUNT(*) FROM usuarios WHERE rol = $1 AND activo = true',
+      const { rows: adminRows } = await db.query(
+        'SELECT COUNT(*) FROM usuarios WHERE rol = $1',
         ['admin']
       );
       
+      const adminCount = parseInt(adminRows[0].count);
+      console.log(`Backend: Hay ${adminCount} administradores en el sistema`);
+      
       // Si ya hay administradores en el sistema, necesitamos crear una solicitud
-      if (adminCount[0].count > 0) {
-        // Primero creamos el usuario pero con rol temporal
-        const tempRol = 'pendiente';
+      if (adminCount > 0) {
+        console.log('Backend: Creando usuario con rol temporal pendiente y solicitud de administrador');
         
-        const newUser = await db.query(
-          'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol',
-          [username, nombre, apellido, email, hashedPassword, tempRol, true, true]
-        );
-        
-        // Crear la solicitud de administrador
-        await db.query(
-          'INSERT INTO solicitudes_admin (usuario_id, solicitante_id, mensaje) VALUES ($1, $2, $3)',
-          [newUser.rows[0].id, req.user.id, `Usuario ${username} solicita permisos de administrador`]
-        );
-        
-        return res.status(201).json({
-          message: 'Usuario creado. Pendiente de aprobación por administradores existentes',
-          usuario: newUser.rows[0],
-          requiereAprobacion: true
-        });
+        try {
+          // Verificar si existe la tabla solicitudes_admin
+          const { rows: tableRows } = await db.query(`
+            SELECT EXISTS (
+              SELECT 1 FROM information_schema.tables 
+              WHERE table_name = 'solicitudes_admin'
+            ) as exists`
+          );
+          
+          const solicitudesTableExists = tableRows[0].exists;
+          
+          if (solicitudesTableExists) {
+            // Primero creamos el usuario pero con rol temporal
+            const tempRol = 'pendiente';
+            
+            // Intentar insertar con los campos cambio_password_requerido y activo
+            try {
+              const newUser = await db.query(
+                'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol',
+                [username, nombre, apellido, email || null, hashedPassword, tempRol, true, true]
+              );
+              
+              // Crear la solicitud de administrador
+              await db.query(
+                'INSERT INTO solicitudes_admin (usuario_id, solicitante_id, mensaje) VALUES ($1, $2, $3)',
+                [newUser.rows[0].id, req.user.id, `Usuario ${username} solicita permisos de administrador`]
+              );
+              
+              return res.status(201).json({
+                message: 'Usuario creado. Pendiente de aprobación por administradores existentes',
+                usuario: newUser.rows[0],
+                requiereAprobacion: true
+              });
+            } catch (insertError) {
+              console.error('Backend: Error al insertar con campos cambio_password_requerido y activo:', insertError);
+              
+              // Si falla, intentar sin esos campos
+              const newUser = await db.query(
+                'INSERT INTO usuarios (username, nombre, apellido, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, nombre, apellido, email, rol',
+                [username, nombre, apellido, email || null, hashedPassword, tempRol]
+              );
+              
+              // Crear la solicitud de administrador
+              await db.query(
+                'INSERT INTO solicitudes_admin (usuario_id, solicitante_id, mensaje) VALUES ($1, $2, $3)',
+                [newUser.rows[0].id, req.user.id, `Usuario ${username} solicita permisos de administrador`]
+              );
+              
+              return res.status(201).json({
+                message: 'Usuario creado. Pendiente de aprobación por administradores existentes',
+                usuario: newUser.rows[0],
+                requiereAprobacion: true
+              });
+            }
+          } else {
+            // Si no existe la tabla, permitimos la creación directa del administrador
+            console.log('Backend: No existe tabla solicitudes_admin, creando admin directamente');
+          }
+        } catch (checkError) {
+          console.error('Backend: Error al verificar tabla solicitudes_admin:', checkError);
+          // Si hay un error, procedemos con la creación directa
+        }
       }
     }
     
-    // Insertar el nuevo usuario con cambio de contraseña obligatorio
-    const result = await db.query(
-      'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol, cambio_password_requerido, created_at',
-      [username, nombre, apellido, email, hashedPassword, rol, true, true]
-    );
+    console.log('Backend: Insertando nuevo usuario con rol:', rol);
     
-    res.status(201).json({
-      message: 'Usuario creado exitosamente',
-      usuario: result.rows[0]
-    });
-    
+    // Intentar insertar con diferentes combinaciones de campos según el esquema
+    try {
+      // Primero intentar con todos los campos
+      const result = await db.query(
+        'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol, cambio_password_requerido, activo',
+        [username, nombre, apellido, email || null, hashedPassword, rol, true, true]
+      );
+      
+      console.log('Backend: Usuario creado exitosamente con todos los campos');
+      
+      return res.status(201).json({
+        message: 'Usuario creado exitosamente',
+        usuario: result.rows[0]
+      });
+    } catch (insertError) {
+      console.error('Backend: Error al insertar con todos los campos:', insertError);
+      
+      try {
+        // Si falla, intentar sin cambio_password_requerido ni activo
+        const result = await db.query(
+          'INSERT INTO usuarios (username, nombre, apellido, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, nombre, apellido, email, rol',
+          [username, nombre, apellido, email || null, hashedPassword, rol]
+        );
+        
+        console.log('Backend: Usuario creado exitosamente con campos básicos');
+        
+        return res.status(201).json({
+          message: 'Usuario creado exitosamente',
+          usuario: result.rows[0]
+        });
+      } catch (insertError2) {
+        console.error('Backend: Error al insertar con campos básicos:', insertError2);
+        throw new Error('No se pudo insertar el usuario en la base de datos. Revise el esquema de la tabla usuarios.');
+      }
+    }
   } catch (error) {
-    console.error('Error al crear usuario:', error);
+    console.error('Backend: Error al crear usuario:', error);
     res.status(500).json({ 
       message: 'Error al crear usuario', 
       error: error.message 

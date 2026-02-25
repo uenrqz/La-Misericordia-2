@@ -13,6 +13,7 @@ export default defineConfig(async () => {
       port: port || PREFERRED_PORT,
       strictPort: true, // Forzar el uso del puerto especificado
       open: true, // Abrir navegador automáticamente
+      host: '0.0.0.0', // Permitir acceso desde cualquier IP, incluido tu celular
     },
   }
 })

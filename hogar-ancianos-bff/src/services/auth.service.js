@@ -13,7 +13,20 @@ class AuthService {
    */
   async login(credentials) {
     try {
-      const response = await apiClient.post('/api/auth/login', credentials);
+      // Normalizar credenciales para el backend
+      const loginCredentials = { ...credentials };
+      
+      // Si el username no contiene @, podría ser un nombre de usuario directo como 'admin' o 'u.enrqz'
+      if (loginCredentials.username && !loginCredentials.username.includes('@')) {
+        console.log(`[BFF Auth] Procesando inicio de sesión con username: ${loginCredentials.username}`);
+        
+        // No modificamos el username, lo enviamos tal cual al backend
+        // El backend debe estar configurado para aceptar tanto username como email
+      }
+      
+      console.log(`[BFF Auth] Enviando solicitud de autenticación al backend para: ${loginCredentials.username}`);
+      
+      const response = await apiClient.post('/api/auth/login', loginCredentials);
       if (!response.data || !response.data.token) {
         throw {
           status: 401,

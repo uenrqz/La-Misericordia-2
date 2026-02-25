@@ -1,0 +1,158 @@
+#!/bin/bash
+# Script para reparar la configuración de PostgreSQL
+# LA MISERICORDIA 2 - Sistema de Gestión
+# Fecha: 28 de mayo de 2025
+
+# Definir colores para mensajes
+VERDE='\033[0;32m'
+ROJO='\033[0;31m'
+AMARILLO='\033[0;33m'
+AZUL='\033[0;34m'
+NORMAL='\033[0m'
+
+echo -e "${AZUL}=====================================================${NORMAL}"
+echo -e "${AZUL}   REPARACIÓN DE POSTGRESQL - LA MISERICORDIA 2      ${NORMAL}"
+echo -e "${AZUL}=====================================================${NORMAL}"
+echo ""
+
+# Obtener el directorio actual
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )"
+BACKEND_DIR="${SCRIPT_DIR}/hogar-ancianos-backend"
+BFF_DIR="${SCRIPT_DIR}/hogar-ancianos-bff"
+FRONTEND_DIR="${SCRIPT_DIR}/hogar-ancianos-frontend"
+
+# Verificar que Docker esté instalado y funcionando
+echo -e "${AMARILLO}Verificando Docker...${NORMAL}"
+if ! command -v docker &>/dev/null; then
+    echo -e "${ROJO}✗${NORMAL} Docker no está instalado. Por favor, instale Docker primero."
+    exit 1
+fi
+
+if ! docker info &>/dev/null; then
+    echo -e "${ROJO}✗${NORMAL} El servicio Docker no está en ejecución. Por favor, inicie Docker primero."
+    exit 1
+fi
+
+echo -e "${VERDE}✓${NORMAL} Docker está instalado y funcionando correctamente"
+
+# Verificar si existe el contenedor de PostgreSQL
+echo -e "${AMARILLO}Verificando contenedor PostgreSQL...${NORMAL}"
+POSTGRES_CONTAINER=$(docker ps -a | grep postgres | awk '{print $1}')
+
+if [ -z "$POSTGRES_CONTAINER" ]; then
+    echo -e "${AMARILLO}!${NORMAL} No se encontró ningún contenedor de PostgreSQL. Creando uno nuevo..."
+    
+    echo -e "${AMARILLO}Iniciando contenedor de PostgreSQL con docker-compose...${NORMAL}"
+    cd "${BACKEND_DIR}" && docker-compose up -d
+    
+    # Esperar a que PostgreSQL esté listo
+    echo -e "${AMARILLO}Esperando a que PostgreSQL esté listo...${NORMAL}"
+    sleep 10
+    
+    POSTGRES_CONTAINER=$(docker ps | grep postgres | awk '{print $1}')
+    
+    if [ -z "$POSTGRES_CONTAINER" ]; then
+        echo -e "${ROJO}✗${NORMAL} No se pudo crear el contenedor de PostgreSQL."
+        exit 1
+    fi
+else
+    # Verificar si el contenedor está en ejecución
+    if ! docker ps | grep -q postgres; then
+        echo -e "${AMARILLO}!${NORMAL} El contenedor existe pero no está en ejecución. Iniciando contenedor..."
+        docker start $POSTGRES_CONTAINER
+        sleep 5
+    fi
+    
+    echo -e "${VERDE}✓${NORMAL} Contenedor PostgreSQL en ejecución"
+fi
+
+# Crear usuario y base de datos si no existen
+echo -e "${AMARILLO}Verificando usuarios y base de datos...${NORMAL}"
+
+# Verificar si existe el usuario hogar_user
+if ! docker exec -it $POSTGRES_CONTAINER psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='hogar_user'" | grep -q 1; then
+    echo -e "${AMARILLO}!${NORMAL} Usuario hogar_user no existe. Creando usuario..."
+    docker exec -it $POSTGRES_CONTAINER psql -U postgres -c "CREATE USER hogar_user WITH PASSWORD 'securepass' CREATEDB;"
+    echo -e "${VERDE}✓${NORMAL} Usuario hogar_user creado"
+else
+    echo -e "${VERDE}✓${NORMAL} Usuario hogar_user existe"
+    
+    # Asegurarse de que el usuario tenga los permisos correctos
+    docker exec -it $POSTGRES_CONTAINER psql -U postgres -c "ALTER USER hogar_user WITH CREATEDB;"
+    echo -e "${VERDE}✓${NORMAL} Permisos de usuario verificados y actualizados"
+fi
+
+# Verificar si existe la base de datos hogar_db
+if ! docker exec -it $POSTGRES_CONTAINER psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname='hogar_db'" | grep -q 1; then
+    echo -e "${AMARILLO}!${NORMAL} Base de datos hogar_db no existe. Creando base de datos..."
+    docker exec -it $POSTGRES_CONTAINER psql -U postgres -c "CREATE DATABASE hogar_db WITH OWNER hogar_user;"
+    echo -e "${VERDE}✓${NORMAL} Base de datos hogar_db creada"
+    
+    # Inicializar esquema básico
+    echo -e "${AMARILLO}Inicializando esquema básico...${NORMAL}"
+    docker cp "${BACKEND_DIR}/scripts/init_db.sql" $POSTGRES_CONTAINER:/init_db.sql
+    docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -f /init_db.sql
+    echo -e "${VERDE}✓${NORMAL} Esquema básico inicializado"
+    
+    # Crear usuario administrador
+    echo -e "${AMARILLO}Creando usuario administrador...${NORMAL}"
+    docker cp "${BACKEND_DIR}/scripts/admin_produccion.sql" $POSTGRES_CONTAINER:/admin_produccion.sql
+    docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -f /admin_produccion.sql
+    echo -e "${VERDE}✓${NORMAL} Usuario administrador creado"
+else
+    echo -e "${VERDE}✓${NORMAL} Base de datos hogar_db existe"
+    
+    # Verificar si el esquema básico está creado
+    if ! docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -c "SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name='usuarios')" | grep -q t; then
+        echo -e "${AMARILLO}!${NORMAL} Esquema básico no encontrado. Inicializando esquema..."
+        docker cp "${BACKEND_DIR}/scripts/init_db.sql" $POSTGRES_CONTAINER:/init_db.sql
+        docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -f /init_db.sql
+        echo -e "${VERDE}✓${NORMAL} Esquema básico inicializado"
+        
+        # Crear usuario administrador
+        echo -e "${AMARILLO}Creando usuario administrador...${NORMAL}"
+        docker cp "${BACKEND_DIR}/scripts/admin_produccion.sql" $POSTGRES_CONTAINER:/admin_produccion.sql
+        docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -f /admin_produccion.sql
+        echo -e "${VERDE}✓${NORMAL} Usuario administrador creado"
+    else
+        echo -e "${VERDE}✓${NORMAL} Esquema básico existe"
+        
+        # Verificar si existe el usuario administrador
+        if ! docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -c "SELECT COUNT(*) FROM usuarios WHERE usuario='admin'" | grep -q "1"; then
+            echo -e "${AMARILLO}!${NORMAL} Usuario administrador no encontrado. Creando usuario administrador..."
+            docker cp "${BACKEND_DIR}/scripts/admin_produccion.sql" $POSTGRES_CONTAINER:/admin_produccion.sql
+            docker exec -it $POSTGRES_CONTAINER psql -U hogar_user -d hogar_db -f /admin_produccion.sql
+            echo -e "${VERDE}✓${NORMAL} Usuario administrador creado"
+        else
+            echo -e "${VERDE}✓${NORMAL} Usuario administrador existe"
+        fi
+    fi
+fi
+
+# Verificar permisos de las tablas
+echo -e "${AMARILLO}Verificando permisos de tablas...${NORMAL}"
+docker exec -it $POSTGRES_CONTAINER psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE hogar_db TO hogar_user;"
+docker exec -it $POSTGRES_CONTAINER psql -U postgres -d hogar_db -c "GRANT ALL PRIVILEGES ON SCHEMA public TO hogar_user;"
+docker exec -it $POSTGRES_CONTAINER psql -U postgres -d hogar_db -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO hogar_user;"
+docker exec -it $POSTGRES_CONTAINER psql -U postgres -d hogar_db -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO hogar_user;"
+docker exec -it $POSTGRES_CONTAINER psql -U postgres -d hogar_db -c "GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO hogar_user;"
+echo -e "${VERDE}✓${NORMAL} Permisos de tablas actualizados"
+
+echo ""
+echo -e "${VERDE}=====================================================${NORMAL}"
+echo -e "${VERDE}   POSTGRESQL REPARADO CORRECTAMENTE                 ${NORMAL}"
+echo -e "${VERDE}=====================================================${NORMAL}"
+echo ""
+echo -e "Credenciales de acceso a PostgreSQL:"
+echo -e "- Usuario: ${VERDE}hogar_user${NORMAL}"
+echo -e "- Contraseña: ${VERDE}securepass${NORMAL}"
+echo -e "- Base de datos: ${VERDE}hogar_db${NORMAL}"
+echo -e "- Puerto: ${VERDE}5432${NORMAL}"
+echo -e "- Host: ${VERDE}localhost${NORMAL}"
+echo ""
+echo -e "Credenciales de administrador del sistema:"
+echo -e "- Usuario: ${VERDE}admin${NORMAL}"
+echo -e "- Contraseña: ${VERDE}Admin2025!${NORMAL}"
+echo ""
+echo -e "Para iniciar el sistema completo, ejecute: ${AZUL}./iniciar_produccion.sh${NORMAL}"
+echo ""

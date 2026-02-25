@@ -5,6 +5,62 @@ import apiClient from './api.config';
 
 const usuariosService = {
   /**
+   * Obtener usuarios públicos para el login (sin autenticación requerida)
+   * @returns {Promise<Array>} Lista básica de usuarios para el login
+   */
+  // Cache de usuarios públicos para reducir llamadas al servidor
+  _cachedPublicUsers: null,
+  _cacheTimestamp: 0,
+  _cacheTTL: 60000, // 1 minuto de tiempo de vida para la caché
+  
+  getUsuariosPublicos: async () => {
+    try {
+      // Usar caché si está disponible y no ha expirado
+      const now = Date.now();
+      if (usuariosService._cachedPublicUsers && 
+          (now - usuariosService._cacheTimestamp) < usuariosService._cacheTTL) {
+        console.log('🔄 Usando caché de usuarios para el login');
+        return usuariosService._cachedPublicUsers;
+      }
+      
+      // Desactivar logs en producción para reducir consumo de memoria
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('📞 Llamando al servicio de usuarios públicos...');
+      }
+      
+      const fetchResponse = await fetch(`${window.location.hostname === 'localhost' 
+        ? 'http://localhost:4000/api/bff' 
+        : `http://${window.location.hostname}:4000/api/bff`}/usuarios/public`, {
+          // Optimizar la petición
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          cache: 'default'
+      });
+      
+      if (!fetchResponse.ok) {
+        throw new Error(`Error de red: ${fetchResponse.status}`);
+      }
+      
+      const data = await fetchResponse.json();
+      
+      // Guardar en caché
+      usuariosService._cachedPublicUsers = data;
+      usuariosService._cacheTimestamp = now;
+      
+      // Desactivar logs en producción
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ Usuarios cargados:', data.length);
+      }
+      
+      return data;
+    } catch (error) {
+      // Log mínimo en producción para reducir overhead
+      console.error('❌ Error al obtener usuarios:', error.message);
+      throw error;
+    }
+  },
+
+  /**
    * Obtener todos los usuarios
    * @returns {Promise<Array>} Lista de usuarios
    */
@@ -38,9 +94,102 @@ const usuariosService = {
    */
   createUsuario: async (userData) => {
     try {
-      return await apiClient.post('/usuarios', userData);
+      console.log('🚀 Iniciando creación de usuario:', {
+        username: userData.username,
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        email: userData.email,
+        rol: userData.rol
+      });
+      
+      // Validar que el rol sea uno de los permitidos antes de enviarlo
+      const rolesPermitidos = ['admin', 'medico', 'enfermero', 'cuidador', 'secretaria'];
+      if (!rolesPermitidos.includes(userData.rol)) {
+        console.warn(`⚠️ Rol no válido "${userData.rol}", cambiando a "enfermero"`);
+        userData.rol = 'enfermero'; // Usar un rol seguro por defecto
+      }
+      
+      // Verificar que todos los campos requeridos estén presentes
+      const camposRequeridos = ['username', 'nombre', 'apellido', 'email', 'password', 'rol'];
+      const camposFaltantes = camposRequeridos.filter(campo => !userData[campo]);
+      
+      if (camposFaltantes.length > 0) {
+        const errorMsg = `Campos requeridos faltantes: ${camposFaltantes.join(', ')}`;
+        console.error(`❌ ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+      
+      // Asegurar que los valores son del tipo correcto
+      const userDataNormalizado = {
+        username: String(userData.username).trim(),
+        nombre: String(userData.nombre).trim(),
+        apellido: String(userData.apellido).trim(),
+        email: String(userData.email).trim(),
+        password: userData.password,
+        rol: String(userData.rol).trim()
+      };
+      
+      console.log('📡 Enviando petición al servidor...');
+      
+      // Usar fetch directamente para tener más control sobre la petición
+      const url = `${window.location.hostname === 'localhost' 
+        ? 'http://localhost:4000/api/bff' 
+        : `http://${window.location.hostname}:4000/api/bff`}/usuarios`;
+      
+      console.log('🔗 URL de petición:', url);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ No hay token de autenticación disponible');
+        throw new Error('No hay token de autenticación disponible');
+      }
+      
+      const fetchResponse = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(userDataNormalizado)
+      });
+      
+      if (!fetchResponse.ok) {
+        const errorData = await fetchResponse.json().catch(() => ({}));
+        console.error(`❌ Error del servidor (${fetchResponse.status}):`, errorData);
+        
+        throw {
+          response: {
+            status: fetchResponse.status,
+            data: errorData,
+            statusText: fetchResponse.statusText
+          }
+        };
+      }
+      
+      const response = await fetchResponse.json();
+      console.log('✅ Usuario creado exitosamente:', response);
+      return response;
     } catch (error) {
-      console.error('Error al crear usuario:', error);
+      console.error('❌ Error al crear usuario:', error);
+      
+      // Mejorar mensaje de error para depuración
+      if (error.response) {
+        console.error('🔍 Datos de la respuesta de error:', {
+          status: error.response.status,
+          data: error.response.data,
+          statusText: error.response.statusText
+        });
+        
+        // Intentar proporcionar un mensaje más descriptivo
+        if (error.response.status === 401) {
+          console.error('🔑 Error de autenticación. Posiblemente el token ha expirado.');
+        } else if (error.response.status === 403) {
+          console.error('🔒 Error de permisos. El usuario no tiene permisos de administrador.');
+        } else if (error.response.status === 400) {
+          console.error('📋 Datos incorrectos:', error.response.data?.message || 'Formato de datos incorrecto');
+        }
+      }
+      
       throw error;
     }
   },

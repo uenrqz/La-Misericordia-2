@@ -53,8 +53,8 @@
 
 ## Credenciales de acceso
 
-- **Usuario administrador**: admin
-- **Contraseña**: Admin2025!
+- **Usuario administrador**: 
+- **Contraseña**:
 
 ## Solución de problemas
 
@@ -63,6 +63,14 @@ Si encuentra algún problema al iniciar el sistema:
 1. **Verificar que Docker esté en ejecución**
 2. **Comprobar puertos disponibles**: 3000 (backend), 4000 (BFF), 5174 (frontend)
 3. **Verificar logs**: Los logs detallados aparecen en la consola durante el inicio
+4. **Ejecutar script de verificación**: Para verificar que la estructura de directorios es correcta:
+   ```bash
+   ./scripts-respaldo/verificar-reorganizacion.sh
+   ```
+5. **Completar la reorganización**: Si aún hay archivos pendientes por reorganizar:
+   ```bash
+   ./scripts-respaldo/completar-reorganizacion.sh
+   ```
 
 ## Usuario administrador para producción
 
@@ -85,6 +93,32 @@ Si encuentra algún problema al iniciar el sistema:
    ```
    psql -U su_usuario -d nombre_db -f hogar-ancianos-backend/scripts/admin_produccion.sql
    ```
+
+## Estructura de directorios del proyecto
+
+La estructura del proyecto ha sido reorganizada para mayor claridad:
+
+```
+/
+├── iniciar-sistema.js         # Script principal de inicio
+├── iniciar-sistema.sh         # Script de shell para iniciar sistema
+├── README.md                  # Este archivo
+├── README_SISTEMA.md          # Documentación general del sistema
+├── produccion/                # Archivos específicos para producción
+│   └── iniciar_produccion.sh  # Script de inicio para producción
+└── scripts-respaldo/          # Scripts y archivos auxiliares
+    ├── admin_tools/           # Herramientas de administración
+    ├── debug_tools/           # Herramientas de depuración
+    ├── documentacion/         # Archivos de documentación
+    ├── html_auxiliares/       # Archivos HTML auxiliares
+    ├── pruebas/               # Scripts de prueba
+    └── scripts-verificacion/  # Scripts de verificación del sistema
+```
+
+> **Nota**: Los enlaces simbólicos a `GUIA_VERIFICACION_SISTEMA.md` e `iniciar_produccion.sh` están disponibles en el directorio raíz para facilitar el acceso.
+
+Para una explicación detallada sobre la estructura de directorios y el propósito de cada carpeta, consulte el archivo:
+[`scripts-respaldo/documentacion/ESTRUCTURA_DIRECTORIOS.md`](./scripts-respaldo/documentacion/ESTRUCTURA_DIRECTORIOS.md)
 
 ## Notas importantes para administración
 

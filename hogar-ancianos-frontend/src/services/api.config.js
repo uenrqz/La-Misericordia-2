@@ -2,11 +2,13 @@ import axios from 'axios';
 
 // Configuración base para las peticiones HTTP
 const apiClient = axios.create({
-  baseURL: 'http://localhost:4000/api/bff',
+  baseURL: window.location.hostname === 'localhost' 
+    ? 'http://localhost:4000/api/bff' 
+    : `http://${window.location.hostname}:4000/api/bff`,
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 30000 // 30 segundos
+  timeout: 30000 // Aumentado a 30 segundos para mayor tolerancia
 });
 
 // Interceptor para manejar tokens de autenticación
@@ -28,6 +30,15 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   async error => {
+    // Mejorar el manejo de errores de timeout
+    if (error.code === 'ECONNABORTED') {
+      console.error('Timeout en la petición:', error.config.url);
+      return Promise.reject({
+        response: { status: 408 },
+        message: 'El servidor está tardando demasiado en responder. Por favor, inténtelo más tarde.'
+      });
+    }
+    
     if (error.response?.status === 401) {
       // Intentar refresh automático antes de redirigir al login
       const token = localStorage.getItem('token');

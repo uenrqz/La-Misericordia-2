@@ -144,6 +144,52 @@ export const SystemProvider = ({ children }) => {
     }
   };
   
+  // Verificar el estado del sistema de forma rápida (para login)
+  const quickCheckSystemStatus = async () => {
+    try {
+      // Intentar una petición simple al BFF con timeout corto
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      // URL dinámica basada en el entorno
+      const baseUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:4000/api/bff' 
+        : `${window.location.protocol}//${window.location.hostname}/api/bff`;
+      
+      const response = await fetch(`${baseUrl}/status`, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        return { online: true, message: 'Servidor conectado' };
+      } else {
+        return { 
+          online: false, 
+          message: `El servidor respondió con estado ${response.status}` 
+        };
+      }
+    } catch (error) {
+      console.error('Error en verificación rápida del sistema:', error);
+      
+      let message = 'No se pudo conectar al servidor';
+      if (error.name === 'AbortError') {
+        message = 'Tiempo de espera agotado al conectar con el servidor';
+      }
+      
+      return { online: false, message };
+    }
+  };
+  
   // Verificar estado del backend a través del BFF
   const checkBackendStatus = async () => {
     try {
@@ -355,6 +401,7 @@ export const SystemProvider = ({ children }) => {
     recoverFromError500,
     checkSystemStatus,
     checkSessionStatus,
+    quickCheckSystemStatus, // Añadir la nueva función
     
     // Manejo de autenticación
     redirectToLogin,

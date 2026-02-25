@@ -5,6 +5,20 @@ import { recuperarDeErrores500, diagnosticarErrores500 } from '../utils/errorHan
 // Constantes
 const API_BASE = '/api';
 
+// Servicio general para obtener datos del dashboard (usado por todos los roles)
+export const getDashboardData = async () => {
+  try {
+    // Llamada al endpoint del BFF que combina múltiples peticiones
+    const dashboardResponse = await apiClient.get('/dashboard');
+    
+    // El BFF ya proporciona los datos combinados y optimizados
+    return dashboardResponse.data;
+  } catch (error) {
+    console.error("Error al obtener datos del dashboard:", error);
+    throw error;
+  }
+};
+
 // Servicio para obtener datos para el dashboard de administración
 export const getAdminDashboardData = async () => {
   try {

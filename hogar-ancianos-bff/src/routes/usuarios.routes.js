@@ -7,6 +7,23 @@ const usuariosService = require('../services/usuarios.service');
 const { authenticate } = require('../middleware/auth.middleware');
 
 /**
+ * @route   GET /api/bff/usuarios/public
+ * @desc    Obtener usuarios para el login (versión pública sin detalles sensibles)
+ * @access  Public
+ */
+router.get('/public', async (req, res) => {
+  try {
+    const usuarios = await usuariosService.obtenerUsuariosParaLogin();
+    res.json(usuarios);
+  } catch (error) {
+    res.status(error.status || 500).json({ 
+      message: error.message || 'Error al obtener usuarios para login',
+      details: error.details
+    });
+  }
+});
+
+/**
  * @route   GET /api/bff/usuarios
  * @desc    Obtener todos los usuarios
  * @access  Private (admin)
@@ -52,12 +69,73 @@ router.get('/:id', authenticate(['admin', 'medico', 'enfermera']), async (req, r
  */
 router.post('/', authenticate(['admin']), async (req, res) => {
   try {
+    console.log('Ruta POST /usuarios: Iniciando creación de usuario', {
+      username: req.body?.username,
+      rol: req.body?.rol
+    });
+    
+    // Verificar que se recibió un cuerpo de solicitud
+    if (!req.body) {
+      return res.status(400).json({
+        message: 'No se recibieron datos para crear el usuario',
+        details: 'El cuerpo de la solicitud está vacío'
+      });
+    }
+    
+    // Importamos el módulo de autenticación correctamente para acceder a sus funciones
+    const { mapearRol } = require('../middleware/auth.middleware');
+    
+    // Validación de roles permitidos en la ruta
+    if (req.body && req.body.rol) {
+      const rolOriginal = req.body.rol;
+      const rolesPermitidos = ['admin', 'medico', 'enfermero', 'cuidador', 'secretaria'];
+      
+      // Mapear el rol a un formato estandarizado
+      const rolMapeado = mapearRol(rolOriginal);
+      
+      // Verificar si el rol mapeado está en la lista de roles permitidos
+      if (!rolesPermitidos.includes(rolMapeado)) {
+        console.warn(`Ruta POST /usuarios: Rol no permitido "${rolOriginal}" (mapeado a "${rolMapeado}"), cambiando a "enfermero"`);
+        req.body.rol = 'enfermero'; // Usar rol seguro por defecto
+      } else {
+        console.log(`Ruta POST /usuarios: Rol válido para creación de usuario: ${rolOriginal} (mapeado a "${rolMapeado}")`);
+        req.body.rol = rolMapeado; // Usar el rol mapeado para garantizar consistencia
+      }
+    }
+    
+    // Verificar que estén todos los campos requeridos
+    const camposRequeridos = ['username', 'nombre', 'apellido', 'password', 'rol'];
+    const camposFaltantes = camposRequeridos.filter(campo => !req.body[campo]);
+    
+    if (camposFaltantes.length > 0) {
+      return res.status(400).json({
+        message: `Campos requeridos faltantes: ${camposFaltantes.join(', ')}`,
+        details: 'Todos los campos marcados son obligatorios'
+      });
+    }
+    
+    // Proceder con la creación del usuario a través del servicio
     const resultado = await usuariosService.crearUsuario(req.body, `Bearer ${req.user.originalToken}`);
+    console.log('Ruta POST /usuarios: Usuario creado exitosamente');
     res.status(201).json(resultado);
   } catch (error) {
-    res.status(error.status || 500).json({ 
-      message: error.message || 'Error al crear usuario',
-      details: error.details
+    console.error('Ruta POST /usuarios: Error al crear usuario:', error);
+    
+    // Crear una respuesta de error más descriptiva y útil
+    const statusCode = error.status || 500;
+    const errorMessage = error.message || 'Error al crear usuario';
+    const errorDetails = error.details || 'Error en el proceso de creación de usuario';
+    
+    // Para errores de servidor (500), dar información más detallada
+    let responseMessage = errorMessage;
+    if (statusCode === 500) {
+      responseMessage = `Error interno del servidor: ${errorMessage}. Por favor contacte al administrador del sistema.`;
+    }
+    
+    res.status(statusCode).json({ 
+      message: responseMessage,
+      details: errorDetails,
+      timestamp: new Date().toISOString()
     });
   }
 });

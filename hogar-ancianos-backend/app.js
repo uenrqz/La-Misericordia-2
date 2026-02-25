@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -9,11 +10,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos estáticos desde la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use(fileUpload({
   createParentPath: true,
   limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB por archivo
   abortOnLimit: true
 }));
+
+// Importar configuración de base de datos
+const { testConnection, sequelize } = require('./src/config/database');
+const { pool } = require('./src/config/db');
 
 // Rutas
 app.use('/api/auth', require('./src/routes/auth.routes'));
@@ -30,30 +39,45 @@ app.use('/api/residentes', require('./src/routes/ordenes-medicas.routes'));
 app.use('/api/donaciones', require('./src/routes/donaciones.routes'));
 app.use('/api/finanzas', require('./src/routes/finanzas.routes'));
 
+// Verificar conexión a PostgreSQL
+async function verificarConexionDB() {
+  try {
+    await testConnection();
+    console.log('✅ Conexión a PostgreSQL verificada correctamente');
+    return true;
+  } catch (err) {
+    console.error('⛔️ Error al verificar conexión a PostgreSQL:', err.message);
+    return false;
+  }
+}
+
 // Ruta de salud para monitoreo
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const dbStatus = await verificarConexionDB();
   res.status(200).json({
     status: 'UP',
     timestamp: new Date().toISOString(),
     service: 'Backend - La Misericordia',
     version: '1.0.0',
-    database: 'connected'
+    database: dbStatus ? 'connected' : 'disconnected'
   });
 });
 
 // Ruta de estado para BFF
-app.get('/api/status', (req, res) => {
+app.get('/api/status', async (req, res) => {
+  const dbStatus = await verificarConexionDB();
   res.status(200).json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: dbStatus ? 'connected' : 'disconnected'
   });
 });
 
 // Ruta principal
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'API del Sistema de Gestión del Hogar de Ancianos La Misericordia', 
+    message: 'API del Sistema de Gestión del Hogar de Ancianos La Misericordia',
     version: '1.0.0' 
   });
 });
@@ -69,26 +93,54 @@ app.use((err, req, res, next) => {
 // Puerto
 const PORT = process.env.PORT || 3000;
 
-// Importar configuración de base de datos
-const { testConnection } = require('./src/config/database');
+// Importar scripts para configuración inicial
+const { crearUsuariosAdmin, initPool } = require('./scripts/crear_usuarios_admin');
+const { sincronizarRoles } = require('./scripts/sincronizar_roles');
 
-// En modo producción, asegurarse de que exista el usuario administrador
-if (process.env.NODE_ENV === 'production') {
-  const { aplicarAdminProduccion } = require('./src/utils/admin-produccion');
-  
-  // Ejecutar al iniciar
-  (async () => {
-    try {
-      await testConnection();
+// Configurar usuarios administradores al iniciar (en cualquier entorno)
+(async () => {
+  try {
+    await testConnection();
+    console.log('Verificando y configurando usuarios administradores...');
+    
+    // Inicializar con el pool existente para evitar conexiones duplicadas
+    initPool({ pool });
+    
+    // Sincronizar roles disponibles en el sistema
+    await sincronizarRoles();
+    console.log('✅ Roles del sistema sincronizados.');
+    
+    // Crear usuarios admin con modo silencioso (menos logs)
+    await crearUsuariosAdmin(true);
+    console.log('✅ Usuarios administradores verificados y actualizados.');
+    
+    // En producción, aplicar configuraciones adicionales
+    if (process.env.NODE_ENV === 'production') {
+      const { aplicarAdminProduccion } = require('./src/utils/admin-produccion');
       console.log('Configurando sistema para entorno de producción...');
       await aplicarAdminProduccion();
       console.log('Sistema listo para producción');
-    } catch (err) {
-      console.error('Error configurando sistema para producción:', err);
     }
-  })();
-}
+  } catch (err) {
+    console.error('Error configurando usuarios administradores:', err);
+  }
+})();
 
-app.listen(PORT, () => {
+// Manejar cierre gracioso
+process.on('SIGINT', async () => {
+  console.log('Cerrando aplicación y conexiones a la base de datos...');
+  try {
+    await sequelize.close();
+    await pool.end();
+    console.log('Conexiones a la base de datos cerradas correctamente');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error al cerrar conexiones a la base de datos:', err);
+    process.exit(1);
+  }
+});
+
+app.listen(PORT, async () => {
   console.log(`Servidor ejecutándose en el puerto ${PORT} en modo ${process.env.NODE_ENV || 'development'}`);
+  await verificarConexionDB();
 });

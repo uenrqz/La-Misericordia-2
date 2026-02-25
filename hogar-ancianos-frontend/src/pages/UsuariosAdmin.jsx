@@ -17,7 +17,7 @@ const UsuariosAdmin = () => {
     password: '',
     confirmPassword: '',
     passwordActual: '',
-    rol: 'enfermera'
+    rol: 'enfermero'
   });
   const [cargando, setCargando] = useState(false);
   const [solicitudes, setSolicitudes] = useState([]);
@@ -64,6 +64,8 @@ const UsuariosAdmin = () => {
   // Abrir modal para crear nuevo usuario
   const abrirModalCrear = () => {
     setModalTipo('crear');
+    // Establecer valores iniciales con rol por defecto 'enfermero'
+    // ya que es un rol que sabemos que existe en el backend
     setFormData({
       username: '',
       nombre: '',
@@ -71,8 +73,9 @@ const UsuariosAdmin = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      rol: 'enfermera'
+      rol: 'enfermero' // Este rol está garantizado en el backend
     });
+    setError(''); // Resetear cualquier error previo
     setModalVisible(true);
   };
 
@@ -128,6 +131,8 @@ const UsuariosAdmin = () => {
   // Crear nuevo usuario
   const crearUsuario = async () => {
     setError('');
+    console.log("Función crearUsuario ejecutada");
+    
     // Validaciones
     if (!formData.username || !formData.nombre || !formData.apellido || !formData.email || !formData.password) {
       setError('Todos los campos son obligatorios');
@@ -145,20 +150,29 @@ const UsuariosAdmin = () => {
     }
 
     setCargando(true);
+    console.log("Iniciando creación de usuario:", formData.username);
+    
     try {
+      // Asegurar que el rol sea uno de los permitidos
+      const rolesPermitidos = ['admin', 'medico', 'enfermero', 'cuidador', 'secretaria'];
+      const rolSeleccionado = rolesPermitidos.includes(formData.rol) ? formData.rol : 'enfermero';
+      
       const userData = {
-        username: formData.username,
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        email: formData.email,
+        username: formData.username.trim(),
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        email: formData.email.trim(),
         password: formData.password,
-        rol: formData.rol
+        rol: rolSeleccionado
       };
 
+      console.log("Enviando datos de usuario:", { ...userData, password: '[OCULTA]' });
       const response = await usuariosService.createUsuario(userData);
+      console.log("Respuesta del servidor:", response);
+      
       showNotification('success', 'Usuario creado', 'El usuario ha sido creado exitosamente');
       
-      if (response.requiereAprobacion) {
+      if (response && response.requiereAprobacion) {
         showNotification('info', 'Aprobación pendiente', 'La creación del administrador requiere aprobación');
       }
       
@@ -166,7 +180,24 @@ const UsuariosAdmin = () => {
       cargarUsuarios();
     } catch (error) {
       console.error('Error al crear usuario:', error);
-      setError(error.message || 'Error al crear usuario');
+      
+      // Intentar extraer el mensaje de error del servidor
+      let mensajeError = 'Error al crear usuario';
+      
+      if (error.response && error.response.data) {
+        mensajeError = error.response.data.message || error.response.data.error || mensajeError;
+        console.error('Detalles del error del servidor:', error.response.data);
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      // Si es un error 500, agregar información adicional
+      if (error.response && error.response.status === 500) {
+        mensajeError = `Error interno del servidor: ${mensajeError}. Posiblemente haya un problema con el rol seleccionado o el formato de los datos.`;
+      }
+      
+      setError(mensajeError);
+      showNotification('error', 'Error al crear usuario', mensajeError);
     } finally {
       setCargando(false);
     }
@@ -346,9 +377,7 @@ const UsuariosAdmin = () => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Correo electrónico"
               />
-            </div>
-            
-            <div className="mb-4">
+            </div>              <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Rol</label>
               <select
                 name="rol"
@@ -356,8 +385,10 @@ const UsuariosAdmin = () => {
                 onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
-                <option value="enfermera">Enfermera</option>
+                <option value="enfermero">Enfermero</option>
+                <option value="cuidador">Cuidador</option>
                 <option value="medico">Médico</option>
+                <option value="secretaria">Secretaria</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
@@ -394,11 +425,11 @@ const UsuariosAdmin = () => {
               </div>
             )}
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3 mt-6">
               <button
                 type="button"
                 onClick={() => setModalVisible(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 min-w-[100px]"
                 disabled={cargando}
               >
                 Cancelar
@@ -406,11 +437,17 @@ const UsuariosAdmin = () => {
               <button
                 type="button"
                 onClick={crearUsuario}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center shadow-md font-medium transition-all duration-200 transform hover:scale-105 min-w-[150px] justify-center"
                 disabled={cargando}
+                style={{ zIndex: 100 }} // Asegurar que el botón esté sobre otros elementos
               >
-                {cargando ? 'Creando...' : 'Crear Usuario'}
+                <FaUserPlus className="mr-2" size={16} /> {cargando ? 'Creando...' : 'Crear Usuario'}
               </button>
+            </div>
+            
+            {/* Mensaje de depuración para ayuda */}
+            <div className="mt-2 text-xs text-gray-400">
+              Si tienes problemas al crear usuarios, contacta al administrador del sistema.
             </div>
           </div>
         );
@@ -464,9 +501,7 @@ const UsuariosAdmin = () => {
                 onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
-            </div>
-            
-            <div className="mb-4">
+            </div>              <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Rol</label>
               <select
                 name="rol"
@@ -475,8 +510,10 @@ const UsuariosAdmin = () => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 disabled={!usuarioEsAdmin()}
               >
-                <option value="enfermera">Enfermera</option>
+                <option value="enfermero">Enfermero</option>
+                <option value="cuidador">Cuidador</option>
                 <option value="medico">Médico</option>
+                <option value="secretaria">Secretaria</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
@@ -676,6 +713,13 @@ const UsuariosAdmin = () => {
               >
                 Cerrar
               </button>
+              <button
+                type="button"
+                onClick={abrirModalCrear}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
+              >
+                <FaUserPlus className="mr-2" /> Nuevo Usuario
+              </button>
             </div>
           </div>
         );
@@ -746,10 +790,15 @@ const UsuariosAdmin = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                     ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                      usuario.rol === 'medico' || usuario.rol === 'doctor' ? 'bg-blue-100 text-blue-800' : 
-                      'bg-green-100 text-green-800'}`}>
+                      usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
+                      usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
+                      usuario.rol === 'cuidador' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-gray-100 text-gray-800'}`}>
                     {usuario.rol === 'admin' ? 'Administrador' : 
-                     usuario.rol === 'medico' || usuario.rol === 'doctor' ? 'Médico' : 'Enfermera'}
+                     usuario.rol === 'medico' ? 'Médico' : 
+                     usuario.rol === 'enfermero' ? 'Enfermero' : 
+                     usuario.rol === 'cuidador' ? 'Cuidador' : 
+                     usuario.rol === 'secretaria' ? 'Secretaria' : usuario.rol}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -809,23 +858,26 @@ const UsuariosAdmin = () => {
           <FaUsers className="mr-2" /> Administración de Usuarios
         </h1>
         
-        <div className="flex space-x-3">
+        <div className="mt-4 md:mt-0 flex space-x-2">
           {usuarioEsAdmin() && (
             <button
               onClick={abrirModalSolicitudes}
-              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="flex items-center px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
             >
-              <FaUserShield className="mr-2" />
-              Solicitudes Admin
+              <FaUserShield className="mr-1" /> Solicitudes
+              {solicitudes.length > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {solicitudes.length}
+                </span>
+              )}
             </button>
           )}
           
           <button
             onClick={abrirModalCrear}
-            className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition-all transform hover:scale-105"
           >
-            <FaUserPlus className="mr-2" />
-            Nuevo Usuario
+            <FaUserPlus className="mr-2" size={18} /> Agregar Usuario
           </button>
         </div>
       </div>
@@ -835,7 +887,7 @@ const UsuariosAdmin = () => {
       {/* Modal */}
       {modalVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto p-6">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto p-6 relative">
             {renderFormulario()}
           </div>
         </div>

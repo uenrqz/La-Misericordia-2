@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api.service';
 
+// Crear el contexto de autenticación con un valor por defecto vacío
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {

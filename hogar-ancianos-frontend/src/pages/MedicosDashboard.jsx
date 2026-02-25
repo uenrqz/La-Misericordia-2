@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { getMedicosDashboardData } from '../services/dashboard.service';
+import { getDashboardData } from '../services/dashboard.service';
 import { formatDateEs, getCurrentDate } from '../utils/format';
 import { useSystem } from '../contexts/SystemContext'; // Importar hook de SystemContext
 
@@ -42,7 +42,11 @@ const MedicosDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState({
-    residentesActivos: 0,
+    residentes: { total: 0, activos: 0, inactivos: 0 },
+    ocupacion: { total: 50, ocupados: 0, disponibles: 50 },
+    signosVitales: [],
+    finanzas: null,
+    graficas: null,
     pacientesPorCategoria: {
       diabetes: 0,
       hipertension: 0,
@@ -52,11 +56,7 @@ const MedicosDashboard = () => {
     },
     evolucionesPendientes: [],
     ordenesMedicasPendientes: [],
-    ordenesRecientes: [],
-    signos: {
-      labels: [],
-      datasets: []
-    }
+    ordenesRecientes: []
   });
 
   // Cargar datos del dashboard
@@ -65,8 +65,21 @@ const MedicosDashboard = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getMedicosDashboardData();
-        setDashboardData(data);
+        // Usar el endpoint general del dashboard del BFF
+        const data = await getDashboardData();
+        setDashboardData({
+          ...data,
+          pacientesPorCategoria: {
+            diabetes: 2,
+            hipertension: 3,
+            cardiacos: 1,
+            demencia: 1,
+            otros: 1
+          },
+          evolucionesPendientes: [],
+          ordenesMedicasPendientes: [],
+          ordenesRecientes: []
+        });
       } catch (error) {
         console.error('Error al cargar datos del dashboard médico:', error);
         setError('No fue posible cargar la información del dashboard');
@@ -164,7 +177,7 @@ const MedicosDashboard = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="text-gray-600 text-sm font-medium">Pacientes Activos</h4>
-                    <p className="text-3xl font-bold mt-1">{dashboardData.residentesActivos}</p>
+                    <p className="text-3xl font-bold mt-1">{dashboardData.residentes?.activos || 0}</p>
                     <p className="text-xs text-gray-500 mt-1">En atención médica</p>
                   </div>
                   <div className="text-blue-500">

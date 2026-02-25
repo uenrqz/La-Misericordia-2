@@ -18,6 +18,41 @@ Backend para el sistema de gestión del Hogar de Ancianos "La Misericordia" en Q
 - PostgreSQL (v13 o superior)
 - npm o yarn
 
+## Configuración de PostgreSQL Local
+
+Ahora el sistema utiliza PostgreSQL local en lugar de Docker. Para configurar PostgreSQL:
+
+1. Asegúrate de tener PostgreSQL instalado localmente:
+   ```
+   brew install postgresql@14
+   brew services start postgresql
+   ```
+
+2. Usa el script de configuración incluido para crear el usuario y la base de datos:
+   ```
+   npm run db:setup
+   ```
+
+   Esto creará:
+   - Usuario: `hogar_user`
+   - Contraseña: `securepass`
+   - Base de datos: `hogar_db`
+
+3. Para hacer un backup de la base de datos:
+   ```
+   npm run db:backup
+   ```
+
+## Configuración para Railway
+
+El sistema está preparado para desplegarse en Railway. Solo necesitas:
+
+1. Crear un proyecto en Railway con PostgreSQL
+2. Conectar tu repositorio de GitHub
+3. Configurar la variable de entorno `NODE_ENV=production`
+
+Railway detectará automáticamente las variables de entorno de la base de datos PostgreSQL.
+
 ## Instalación
 
 ### 1. Clonar el repositorio

@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
 // Layouts
@@ -40,6 +42,7 @@ function App() {
   return (
     <SystemProvider>
       <Router>
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
         <Routes>
           {/* Ruta pública para el login */}
           <Route path="/login" element={<Login />} />
@@ -65,7 +68,9 @@ function App() {
               <RequireAuth>
                 {(() => {
                   const user = JSON.parse(localStorage.getItem('user') || '{}');
-                  const isAdmin = user?.role === 'admin' || user?.rol === 'admin';
+                  // Verificar si tiene rol admin directo o en roles adicionales
+                  const userRoles = user?.roles || [user?.role || user?.rol];
+                  const isAdmin = userRoles.includes('admin');
                   return isAdmin ? <SystemDiagnostic /> : <Navigate to="/app/dashboard" replace />;
                 })()}
               </RequireAuth>

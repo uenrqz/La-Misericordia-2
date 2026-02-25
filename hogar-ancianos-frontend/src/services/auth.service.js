@@ -15,8 +15,14 @@ const authService = {
         throw new Error('La contraseña no puede estar vacía');
       }
       
+      // Asegurar que el username tiene el formato correcto
+      // Si no contiene @, se asume que es solo el nombre de usuario
+      const usernameForLogin = username.includes('@') ? username : username;
+      
+      console.log('Enviando solicitud de login con username:', usernameForLogin);
+      
       // Autenticación con el servidor
-      const response = await apiClient.post('/auth/login', { username, password });
+      const response = await apiClient.post('/auth/login', { username: usernameForLogin, password });
       
       // Verificar respuesta
       if (!response || !response.token || !response.user) {

@@ -6,6 +6,13 @@ const { authenticate } = require('../middlewares/auth.middleware');
 const usuariosController = require('../controllers/usuarios.controller');
 
 /**
+ * @route   GET /api/usuarios/public
+ * @desc    Obtener lista pública de usuarios para login (sin datos sensibles)
+ * @access  Public
+ */
+router.get('/public', usuariosController.getUsuariosPublicos);
+
+/**
  * @route   GET /api/usuarios
  * @desc    Obtener todos los usuarios (solo admin)
  * @access  Private
@@ -17,7 +24,7 @@ router.get('/', authenticate(['admin']), usuariosController.getUsuarios);
  * @desc    Obtener un usuario por su ID
  * @access  Private (admin o el mismo usuario)
  */
-router.get('/:id', authenticate(['admin', 'medico', 'doctor', 'enfermera']), usuariosController.getUsuarioById);
+router.get('/:id', authenticate(['admin']), usuariosController.getUsuarioById);
 
 /**
  * @route   POST /api/usuarios

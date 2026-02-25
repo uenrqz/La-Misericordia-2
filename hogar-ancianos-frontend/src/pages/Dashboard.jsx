@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -14,6 +14,8 @@ import {
 import { Link } from 'react-router-dom';
 import { formatCurrency, getCurrentDate, formatDateEs } from '../utils/format';
 import { getAdminDashboardData } from '../services/dashboard.service';
+// Importar contexto de autenticación
+import AuthContext from '../context/AuthContext';
 
 ChartJS.register(
   CategoryScale,
@@ -27,6 +29,12 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
+  // Usar el contexto de autenticación para obtener el usuario
+  const { user } = useContext(AuthContext);
+  
+  // Depuración para ver qué datos contiene el usuario
+  console.log('Datos del usuario en Dashboard:', user);
+  
   // Obtener hora del día para el saludo
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -105,7 +113,9 @@ const Dashboard = () => {
     <div className="p-4">
       {/* Encabezado con saludo personalizado */}
       <h1 className="text-2xl font-bold text-gray-800">Inicio</h1>
-      <h2 className="text-xl font-medium text-gray-700 mt-2">{getGreeting()}, Administrador</h2>
+      <h2 className="text-xl font-medium text-gray-700 mt-2">
+        {getGreeting()}, {user?.nombre || user?.name || user?.firstName || ''} {user?.apellido || user?.lastName || ''}
+      </h2>
       <p className="text-gray-500 text-sm">{getCurrentDate()}</p>
       
       {loading ? (

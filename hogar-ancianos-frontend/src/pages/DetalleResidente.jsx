@@ -1,143 +1,116 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FaArrowLeft, FaFileMedical, FaPills, FaHeartbeat, FaNotesMedical } from 'react-icons/fa';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { FaArrowLeft, FaFileMedical, FaPills, FaHeartbeat, FaNotesMedical, FaUserCircle, FaCamera } from 'react-icons/fa';
+import { residentesService } from '../services/residentes.service';
+import Modal from '../components/common/Modal';
+import Spinner from '../components/common/Spinner';
 
 const DetalleResidente = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [residente, setResidente] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('general');
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
-    // Simulación de carga de datos del residente desde el backend
-    const fetchResidenteDetalle = async () => {
-      setIsLoading(true);
-      try {
-        // En un entorno real, esto sería una llamada al API
-        // const response = await axios.get(`/api/residentes/${id}`);
-        
-        // Simulación con timeout para representar tiempo de respuesta del servidor
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Datos simulados para desarrollo
-        const residenteDetalle = {
-          id: parseInt(id),
-          nombre: 'María González',
-          edad: 78,
-          fechaNacimiento: '10/08/1946',
-          genero: 'Femenino',
-          habitacion: '101',
-          fechaIngreso: '12/02/2024',
-          estadoSalud: 'Estable',
-          responsable: 'Ana González (Hija)',
-          telefonoContacto: '5555-1234',
-          diagnosticos: [
-            { id: 1, descripcion: 'Hipertensión arterial', fecha: '20/02/2024' },
-            { id: 2, descripcion: 'Diabetes tipo 2', fecha: '20/02/2024' },
-            { id: 3, descripcion: 'Artrosis', fecha: '15/03/2024' }
-          ],
-          medicamentos: [
-            { id: 1, nombre: 'Enalapril', dosis: '10mg', frecuencia: 'Cada 12 horas', horario: '8:00, 20:00' },
-            { id: 2, nombre: 'Metformina', dosis: '850mg', frecuencia: 'Con el almuerzo', horario: '13:00' },
-            { id: 3, nombre: 'Paracetamol', dosis: '500mg', frecuencia: 'Según necesidad', horario: 'SOS' }
-          ],
-          signosVitales: [
-            { 
-              id: 1, 
-              fecha: '13/05/2025', 
-              hora: '08:00', 
-              temperatura: 36.7, 
-              presionSistolica: 130, 
-              presionDiastolica: 85,
-              frecuenciaCardiaca: 72,
-              glucemia: 120,
-              oxigenacion: 97,
-              enfermera: 'Lucia Méndez'
-            },
-            { 
-              id: 2, 
-              fecha: '12/05/2025', 
-              hora: '20:00', 
-              temperatura: 36.5, 
-              presionSistolica: 128, 
-              presionDiastolica: 82,
-              frecuenciaCardiaca: 70,
-              glucemia: 118,
-              oxigenacion: 98,
-              enfermera: 'Pedro Castillo'
-            },
-            { 
-              id: 3, 
-              fecha: '12/05/2025', 
-              hora: '08:00', 
-              temperatura: 36.8, 
-              presionSistolica: 135, 
-              presionDiastolica: 88,
-              frecuenciaCardiaca: 75,
-              glucemia: 125,
-              oxigenacion: 96,
-              enfermera: 'Lucia Méndez'
-            }
-          ],
-          ordenesMedicas: [
-            { 
-              id: 1, 
-              fecha: '10/05/2025', 
-              doctor: 'Dr. Rodríguez', 
-              descripcion: 'Aumentar dosis de Enalapril a 20mg cada 12 horas por una semana, luego volver a 10mg.',
-              estado: 'Activa'
-            },
-            { 
-              id: 2, 
-              fecha: '05/05/2025', 
-              doctor: 'Dr. Rodríguez', 
-              descripcion: 'Realizar glucemia 3 veces al día durante 5 días.',
-              estado: 'Completada'
-            }
-          ],
-          evoluciones: [
-            { 
-              id: 1, 
-              fecha: '12/05/2025', 
-              hora: '10:30',
-              responsable: 'Dr. Rodríguez',
-              descripcion: 'Paciente presenta mejora en control de presión arterial tras ajuste de medicación. Continuar monitoreo diario.' 
-            },
-            { 
-              id: 2, 
-              fecha: '08/05/2025', 
-              hora: '11:15',
-              responsable: 'Dr. Rodríguez',
-              descripcion: 'Se observa ligero aumento de presión arterial. Se ajusta medicación y se solicita monitoreo más frecuente.' 
-            },
-            { 
-              id: 3, 
-              fecha: '01/05/2025', 
-              hora: '09:45',
-              responsable: 'Dr. Rodríguez',
-              descripcion: 'Evaluación mensual. Paciente estable, refiere dolor ocasional en articulaciones. Se mantiene tratamiento actual.' 
-            }
-          ]
-        };
-        
-        setResidente(residenteDetalle);
-      } catch (error) {
-        console.error('Error al cargar detalles del residente:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchResidenteDetalle();
   }, [id]);
 
+  const fetchResidenteDetalle = async () => {
+    setIsLoading(true);
+    try {
+      const response = await residentesService.getResidenteById(id);
+      setResidente(response.data);
+    } catch (error) {
+      console.error('Error al cargar detalles del residente:', error);
+      toast.error('Error al cargar los detalles del residente');
+      navigate('/app/residentes');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        toast.error('El archivo debe ser una imagen');
+        return;
+      }
+      
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('La imagen no debe exceder los 5MB');
+        return;
+      }
+      
+      setPhotoFile(file);
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handlePhotoUpload = async () => {
+    if (!photoFile) {
+      toast.error('Debe seleccionar una imagen');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      await residentesService.uploadResidentePhoto(id, photoFile);
+      toast.success('Foto actualizada exitosamente');
+      setPhotoModalOpen(false);
+      fetchResidenteDetalle();
+    } catch (err) {
+      console.error('Error al subir foto:', err);
+      toast.error('Error al subir la foto');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handlePhotoDelete = async () => {
+    if (!residente?.foto_url) {
+      toast.error('El residente no tiene una foto para eliminar');
+      return;
+    }
+    
+    if (window.confirm('¿Está seguro de que desea eliminar la foto de este residente?')) {
+      try {
+        setIsLoading(true);
+        await residentesService.deleteResidentePhoto(id);
+        toast.success('Foto eliminada exitosamente');
+        setPhotoModalOpen(false);
+        fetchResidenteDetalle();
+      } catch (err) {
+        console.error('Error al eliminar foto:', err);
+        toast.error('Error al eliminar la foto');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const openPhotoModal = () => {
+    setPhotoPreview(residente?.foto_url || null);
+    setPhotoFile(null);
+    setPhotoModalOpen(true);
+  };
+
   if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
-        <p className="mt-3 text-gray-600">Cargando información del residente...</p>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!residente) {
@@ -454,6 +427,61 @@ const DetalleResidente = () => {
           </div>
         )}
       </div>
+      
+      {/* Modal para foto del residente */}
+      <Modal isOpen={photoModalOpen} onClose={() => setPhotoModalOpen(false)}>
+        <div className="p-4">
+          <h3 className="text-lg font-semibold mb-4">Foto del Residente</h3>
+          
+          {photoPreview && (
+            <div className="mb-4">
+              <img src={photoPreview} alt="Foto del residente" className="w-full h-auto rounded-md" />
+            </div>
+          )}
+          
+          <div className="flex items-center mb-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+              ref={fileInputRef}
+            />
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+            >
+              <FaCamera className="mr-2" />
+              {photoFile ? 'Cambiar Foto' : 'Subir Foto'}
+            </button>
+            {photoFile && (
+              <button
+                onClick={() => setPhotoFile(null)}
+                className="ml-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
+              >
+                <FaTrash className="mr-2" />
+                Eliminar Foto
+              </button>
+            )}
+          </div>
+          
+          <div className="flex justify-end">
+            <button
+              onClick={handlePhotoUpload}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+            >
+              {isLoading ? (
+                <Spinner size="sm" />
+              ) : (
+                <>
+                  <FaSave className="mr-2" />
+                  Guardar Foto
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
