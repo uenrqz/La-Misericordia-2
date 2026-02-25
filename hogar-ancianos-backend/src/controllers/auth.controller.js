@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const soutConfig = require('../config/sout');
 const { generateToken } = require('../middlewares/auth.middleware');
 const { pool } = require('../config/db'); 
-const {jwt} = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 
 /**
