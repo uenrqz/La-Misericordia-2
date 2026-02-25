@@ -24,6 +24,23 @@ router.get('/public', async (req, res) => {
 });
 
 /**
+ * @route   GET /api/bff/usuarios/admin/solicitudes
+ * @desc    Obtener solicitudes pendientes de administrador
+ * @access  Private (admin)
+ */
+router.get('/admin/solicitudes', authenticate(['admin']), async (req, res) => {
+  try {
+    const solicitudes = await usuariosService.obtenerSolicitudesAdmin(`Bearer ${req.user.originalToken}`);
+    res.json(solicitudes);
+  } catch (error) {
+    res.status(error.status || 500).json({ 
+      message: error.message || 'Error al obtener solicitudes de administrador',
+      details: error.details
+    });
+  }
+});
+
+/**
  * @route   GET /api/bff/usuarios
  * @desc    Obtener todos los usuarios
  * @access  Private (admin)
@@ -228,23 +245,6 @@ router.put('/:id/estado', authenticate(['admin']), async (req, res) => {
   } catch (error) {
     res.status(error.status || 500).json({ 
       message: error.message || 'Error al cambiar estado del usuario',
-      details: error.details
-    });
-  }
-});
-
-/**
- * @route   GET /api/bff/usuarios/admin/solicitudes
- * @desc    Obtener solicitudes pendientes de administrador
- * @access  Private (admin)
- */
-router.get('/admin/solicitudes', authenticate(['admin']), async (req, res) => {
-  try {
-    const solicitudes = await usuariosService.obtenerSolicitudesAdmin(`Bearer ${req.user.originalToken}`);
-    res.json(solicitudes);
-  } catch (error) {
-    res.status(error.status || 500).json({ 
-      message: error.message || 'Error al obtener solicitudes de administrador',
       details: error.details
     });
   }
