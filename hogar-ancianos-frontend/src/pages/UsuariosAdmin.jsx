@@ -1040,9 +1040,9 @@ const UsuariosAdmin = () => {
                 </button>
                 <button
                   onClick={() => abrirModalPassword(usuario)}
-                  className="flex-1 min-w-[70px] px-3 py-2.5 text-base font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
+                  className="flex-1 min-w-[100px] px-3 py-2.5 text-base font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
                 >
-                  Pwd
+                  Contraseña camb.
                 </button>
                 {usuarioEsAdmin() && usuario.id !== JSON.parse(localStorage.getItem('user')).id && (
                   <>
@@ -1069,8 +1069,8 @@ const UsuariosAdmin = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 mb-8">
+    <div className="bg-white rounded-lg shadow-md p-0">
+      <div className="p-8">
         <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 flex items-center">
           <FaUsers className="mr-2" /> Usuarios
         </h1>
@@ -1099,7 +1099,9 @@ const UsuariosAdmin = () => {
         </div>
       </div>
       
-      {renderTablaUsuarios()}
+      <div className="overflow-x-auto">
+        {renderTablaUsuarios()}
+      </div>
       
       {/* Modal */}
       {modalVisible && (
