@@ -405,7 +405,7 @@ const UsuariosAdmin = () => {
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Nombre</label>
                 <input
@@ -413,7 +413,7 @@ const UsuariosAdmin = () => {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Nombre"
                 />
               </div>
@@ -425,7 +425,7 @@ const UsuariosAdmin = () => {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Apellido"
                 />
               </div>
@@ -495,7 +495,7 @@ const UsuariosAdmin = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Contraseña</label>
                 <input
@@ -503,7 +503,7 @@ const UsuariosAdmin = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="********"
                 />
               </div>
@@ -515,7 +515,7 @@ const UsuariosAdmin = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="********"
                 />
               </div>
@@ -527,11 +527,11 @@ const UsuariosAdmin = () => {
               </div>
             )}
             
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <button
                 type="button"
                 onClick={() => setModalVisible(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 min-w-[100px]"
+                className="flex-1 sm:flex-none px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
                 disabled={cargando}
               >
                 Cancelar
@@ -539,18 +539,14 @@ const UsuariosAdmin = () => {
               <button
                 type="button"
                 onClick={crearUsuario}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center shadow-md font-medium transition-all duration-200 transform hover:scale-105 min-w-[150px] justify-center"
+                className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center shadow-md font-medium transition-all duration-200 text-sm"
                 disabled={cargando}
-                style={{ zIndex: 100 }} // Asegurar que el botón esté sobre otros elementos
               >
-                <FaUserPlus className="mr-2" size={16} /> {cargando ? 'Creando...' : 'Crear Usuario'}
+                <FaUserPlus className="mr-2" size={14} /> {cargando ? 'Creando...' : 'Crear'}
               </button>
             </div>
             
-            {/* Mensaje de depuración para ayuda */}
-            <div className="mt-2 text-xs text-gray-400">
-              Si tienes problemas al crear usuarios, contacta al administrador del sistema.
-            </div>
+
           </div>
         );
         
@@ -570,7 +566,7 @@ const UsuariosAdmin = () => {
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Nombre</label>
                 <input
@@ -578,7 +574,7 @@ const UsuariosAdmin = () => {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
               
@@ -589,7 +585,7 @@ const UsuariosAdmin = () => {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
             </div>
@@ -601,7 +597,7 @@ const UsuariosAdmin = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
             </div>              <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Rol</label>
@@ -609,7 +605,7 @@ const UsuariosAdmin = () => {
                 name="rol"
                 value={formData.rol}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 disabled={!usuarioEsAdmin()}
               >
                 <option value="enfermero">Enfermero</option>
@@ -621,35 +617,35 @@ const UsuariosAdmin = () => {
             </div>
 
             <div className="mb-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <label className="block text-sm font-medium text-gray-700">Permisos</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={aplicarPermisosRecomendados}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     Recomendados
                   </button>
                   <button
                     type="button"
                     onClick={seleccionarTodosLosPermisos}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     Todos
                   </button>
                 </div>
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {PERMISOS_DISPONIBLES.map((permiso) => (
-                  <label key={permiso.id} className="flex items-center gap-2 text-sm text-gray-700">
+                  <label key={permiso.id} className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
                     <input
                       type="checkbox"
                       checked={Array.isArray(formData.permisos) && formData.permisos.includes(permiso.id)}
                       onChange={() => togglePermiso(permiso.id)}
                       className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                     />
-                    {permiso.label}
+                    <span className="truncate">{permiso.label}</span>
                   </label>
                 ))}
               </div>
@@ -664,11 +660,11 @@ const UsuariosAdmin = () => {
               </div>
             )}
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={() => setModalVisible(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                className="flex-1 sm:flex-none px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
                 disabled={cargando}
               >
                 Cancelar
@@ -676,7 +672,7 @@ const UsuariosAdmin = () => {
               <button
                 type="button"
                 onClick={actualizarUsuario}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="flex-1 sm:flex-none px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium"
                 disabled={cargando}
               >
                 {cargando ? 'Actualizando...' : 'Actualizar'}
@@ -889,122 +885,203 @@ const UsuariosAdmin = () => {
     }
 
     return (
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {usuarios.map((usuario) => (
-              <tr key={usuario.id} className={!usuario.activo ? 'bg-gray-100' : ''}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-primary-100 text-primary-800">
-                      {usuario.nombre.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {usuario.username}
+      <div>
+        {/* Vista Desktop - Tabla */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th className="hidden lg:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                <th className="hidden sm:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {usuarios.map((usuario) => (
+                <tr key={usuario.id} className={!usuario.activo ? 'bg-gray-100' : ''}>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-xs font-bold">
+                        {usuario.nombre.charAt(0).toUpperCase()}
                       </div>
-                      {usuario.cambio_password_requerido && (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          Cambio de contraseña pendiente
-                        </span>
+                      <div className="min-w-0">
+                        <div className="text-xs lg:text-sm font-medium text-gray-900 truncate">
+                          {usuario.username}
+                        </div>
+                        {usuario.cambio_password_requerido && (
+                          <span className="px-1 inline-flex text-xs leading-4 font-semibold rounded bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                            Cambio pwd
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
+                    <div className="text-xs lg:text-sm text-gray-900 truncate">{usuario.nombre} {usuario.apellido}</div>
+                  </td>
+                  <td className="hidden lg:table-cell px-4 lg:px-6 py-3 whitespace-nowrap">
+                    <div className="text-xs lg:text-sm text-gray-900 truncate">{usuario.email || '-'}</div>
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                        usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
+                        usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
+                        usuario.rol === 'cuidador' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-gray-100 text-gray-800'}`}>
+                      {usuario.rol === 'admin' ? 'Admin' : 
+                       usuario.rol === 'medico' ? 'Médico' : 
+                       usuario.rol === 'enfermero' ? 'Enf.' : 
+                       usuario.rol === 'cuidador' ? 'Cuid.' : 
+                       usuario.rol === 'secretaria' ? 'Sec.' : usuario.rol}
+                    </span>
+                  </td>
+                  <td className="hidden sm:table-cell px-4 lg:px-6 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {usuario.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-1 lg:gap-2">
+                      <button
+                        onClick={() => abrirModalEditar(usuario)}
+                        className="p-1.5 lg:p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
+                        title="Editar usuario"
+                      >
+                        <FaEdit size={14} />
+                      </button>
+                      <button
+                        onClick={() => abrirModalPassword(usuario)}
+                        className="p-1.5 lg:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
+                        title="Cambiar contraseña"
+                      >
+                        <FaLock size={14} />
+                      </button>
+                      {usuarioEsAdmin() && usuario.id !== JSON.parse(localStorage.getItem('user')).id && (
+                        <>
+                          <button
+                            onClick={() => toggleEstadoUsuario(usuario)}
+                            className={`p-1.5 lg:p-2 rounded ${usuario.activo ? 'text-red-600 hover:text-red-900 hover:bg-red-50' : 'text-green-600 hover:text-green-900 hover:bg-green-50'}`}
+                            title={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
+                          >
+                            {usuario.activo ? <FaTimes size={14} /> : <FaCheck size={14} />}
+                          </button>
+                          <button
+                            onClick={() => abrirModalEliminar(usuario)}
+                            className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                            title="Eliminar usuario"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </>
                       )}
                     </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Vista Mobile - Tarjetas */}
+        <div className="md:hidden space-y-3">
+          {usuarios.map((usuario) => (
+            <div key={usuario.id} className={`border rounded-lg p-3 ${!usuario.activo ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-xs font-bold">
+                    {usuario.nombre.charAt(0).toUpperCase()}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{usuario.nombre} {usuario.apellido}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{usuario.email || '-'}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                      usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
-                      usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
-                      usuario.rol === 'cuidador' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-gray-100 text-gray-800'}`}>
-                    {usuario.rol === 'admin' ? 'Administrador' : 
-                     usuario.rol === 'medico' ? 'Médico' : 
-                     usuario.rol === 'enfermero' ? 'Enfermero' : 
-                     usuario.rol === 'cuidador' ? 'Cuidador' : 
-                     usuario.rol === 'secretaria' ? 'Secretaria' : usuario.rol}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{usuario.username}</p>
+                    <p className="text-xs text-gray-600 truncate">{usuario.nombre} {usuario.apellido}</p>
+                  </div>
+                </div>
+                <span className={`flex-shrink-0 px-2 py-1 text-xs font-semibold rounded-full
+                  ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                    usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
+                    usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
+                    usuario.rol === 'cuidador' ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-gray-100 text-gray-800'}`}>
+                  {usuario.rol === 'admin' ? 'Admin' : 
+                   usuario.rol === 'medico' ? 'Médico' : 
+                   usuario.rol === 'enfermero' ? 'Enf.' : 
+                   usuario.rol === 'cuidador' ? 'Cuid.' : 
+                   usuario.rol === 'secretaria' ? 'Sec.' : usuario.rol}
+                </span>
+              </div>
+              
+              {usuario.email && (
+                <p className="text-xs text-gray-600 mb-2 truncate">Email: {usuario.email}</p>
+              )}
+              
+              <div className="flex items-center justify-between mb-3">
+                <span className={`text-xs font-semibold rounded-full px-2 py-0.5
+                  ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {usuario.activo ? 'Activo' : 'Inactivo'}
+                </span>
+                {usuario.cambio_password_requerido && (
+                  <span className="text-xs bg-yellow-100 text-yellow-800 rounded-full px-2 py-0.5">
+                    Cambio pwd
                   </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {usuario.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex space-x-2">
+                )}
+              </div>
+              
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => abrirModalEditar(usuario)}
+                  className="flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium text-primary-600 border border-primary-600 rounded hover:bg-primary-50"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => abrirModalPassword(usuario)}
+                  className="flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
+                >
+                  Pwd
+                </button>
+                {usuarioEsAdmin() && usuario.id !== JSON.parse(localStorage.getItem('user')).id && (
+                  <>
                     <button
-                      onClick={() => abrirModalEditar(usuario)}
-                      className="text-primary-600 hover:text-primary-900"
-                      title="Editar usuario"
+                      onClick={() => toggleEstadoUsuario(usuario)}
+                      className={`flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium rounded border ${usuario.activo ? 'text-red-600 border-red-600 hover:bg-red-50' : 'text-green-600 border-green-600 hover:bg-green-50'}`}
                     >
-                      <FaEdit />
+                      {usuario.activo ? 'Desact.' : 'Act.'}
                     </button>
                     <button
-                      onClick={() => abrirModalPassword(usuario)}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="Cambiar contraseña"
+                      onClick={() => abrirModalEliminar(usuario)}
+                      className="flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium text-red-600 border border-red-600 rounded hover:bg-red-50"
                     >
-                      <FaLock />
+                      Elim.
                     </button>
-                    {usuarioEsAdmin() && usuario.id !== JSON.parse(localStorage.getItem('user')).id && (
-                      <>
-                        <button
-                          onClick={() => toggleEstadoUsuario(usuario)}
-                          className={`${usuario.activo ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
-                          title={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
-                        >
-                          {usuario.activo ? <FaTimes /> : <FaCheck />}
-                        </button>
-                        <button
-                          onClick={() => abrirModalEliminar(usuario)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Eliminar usuario"
-                        >
-                          <FaTrash />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800 flex items-center">
-          <FaUsers className="mr-2" /> Administración de Usuarios
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center">
+          <FaUsers className="mr-2" /> Usuarios
         </h1>
         
-        <div className="mt-4 md:mt-0 flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           {usuarioEsAdmin() && (
             <button
               onClick={abrirModalSolicitudes}
-              className="flex items-center px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+              className="flex items-center justify-center px-3 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600"
             >
-              <FaUserShield className="mr-1" /> Solicitudes
+              <FaUserShield className="mr-1" size={16} /> Solicitudes
               {solicitudes.length > 0 && (
                 <span className="ml-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {solicitudes.length}
@@ -1015,9 +1092,9 @@ const UsuariosAdmin = () => {
           
           <button
             onClick={abrirModalCrear}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition-all transform hover:scale-105"
+            className="flex items-center justify-center px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition-all"
           >
-            <FaUserPlus className="mr-2" size={18} /> Agregar Usuario
+            <FaUserPlus className="mr-2" size={16} /> Agregar
           </button>
         </div>
       </div>
@@ -1026,8 +1103,8 @@ const UsuariosAdmin = () => {
       
       {/* Modal */}
       {modalVisible && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
             {renderFormulario()}
           </div>
         </div>
