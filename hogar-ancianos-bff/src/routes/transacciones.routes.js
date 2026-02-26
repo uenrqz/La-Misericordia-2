@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const { authenticateToken } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
 // Middleware de autenticación para todas las rutas
-router.use(authenticateToken);
+router.use(authenticate());
 
 /**
  * @route GET /api/bff/transacciones
