@@ -92,7 +92,7 @@ export const SystemProvider = ({ children }) => {
     try {
       console.log('Verificando estado del sistema...');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Aumentado a 15s para Render
       
       const baseUrl = getBffApiBaseUrl();
       
@@ -132,7 +132,13 @@ export const SystemProvider = ({ children }) => {
         setDisconnected(true);
       }
     } catch (error) {
-      console.error('Error al verificar estado del sistema:', error);
+      let errorMsg = error.message || 'Error desconocido';
+      if (error.name === 'AbortError') {
+        errorMsg = 'Timeout: el servidor tardó demasiado en responder (>15s)';
+        console.warn('⏱️ Timeout al conectar con el BFF. Es posible que esté durmiendo o sea muy lento.');
+      } else {
+        console.error('❌ Error al verificar estado del sistema:', error);
+      }
       setSystemStatus(prev => ({
         ...prev,
         bff: 'offline',
@@ -145,9 +151,9 @@ export const SystemProvider = ({ children }) => {
   // Verificar el estado del sistema de forma rápida (para login)
   const quickCheckSystemStatus = async () => {
     try {
-      // Intentar una petición simple al BFF con timeout corto
+      // Intentar una petición simple al BFF con timeout más generoso para Render
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Aumentado a 10s
       
       const baseUrl = getBffApiBaseUrl();
       
@@ -174,11 +180,12 @@ export const SystemProvider = ({ children }) => {
         };
       }
     } catch (error) {
-      console.error('Error en verificación rápida del sistema:', error);
-      
       let message = 'No se pudo conectar al servidor';
       if (error.name === 'AbortError') {
-        message = 'Tiempo de espera agotado al conectar con el servidor';
+        message = 'Tiempo de espera agotado al conectar con el servidor (>10s). El servidor puede estar durmiendo.';
+        console.warn('⏱️ BFF respondió lentamente o está durmiendo en Render.');
+      } else {
+        console.error('Error en verificación rápida del sistema:', error);
       }
       
       return { online: false, message };

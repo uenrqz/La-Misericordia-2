@@ -13,7 +13,7 @@ const diagnosticService = {
     try {
       const response = await fetchWithErrorHandling(`${getBffApiBaseUrl()}/status`, { 
         method: 'GET',
-        timeout: 5000,
+        timeout: 15000, // Aumentado a 15s para Render
         maxRetries: 1
       });
       
@@ -53,7 +53,7 @@ const diagnosticService = {
     try {
       const response = await fetchWithErrorHandling(`${getBffApiBaseUrl()}/diagnostic/backend-status`, { 
         method: 'GET',
-        timeout: 5000,
+        timeout: 15000, // Aumentado a 15s para Render
         maxRetries: 1
       });
       

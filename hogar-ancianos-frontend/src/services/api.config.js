@@ -31,10 +31,10 @@ apiClient.interceptors.response.use(
   async error => {
     // Mejorar el manejo de errores de timeout
     if (error.code === 'ECONNABORTED') {
-      console.error('Timeout en la petición:', error.config.url);
+      console.error('⏱️ Timeout en la petición:', error.config.url);
       return Promise.reject({
         response: { status: 408 },
-        message: 'El servidor está tardando demasiado en responder. Por favor, inténtelo más tarde.'
+        message: 'Tiempo de espera agotado. El servidor está muy lento o durmiendo en Render. Intenta de nuevo en unos momentos.'
       });
     }
     
