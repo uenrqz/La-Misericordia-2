@@ -42,6 +42,25 @@ function initPool(options = {}) {
 }
 
 /**
+ * Asegura que la columna roles_adicionales exista en la tabla usuarios
+ */
+async function ensureRolesAdicionalesColumn() {
+  if (!pool) {
+    initPool();
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query(
+      "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS roles_adicionales TEXT DEFAULT '[]'"
+    );
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Función principal para crear/actualizar usuarios administradores
  * @param {boolean} silentMode Si es true, reduce los mensajes en consola
  */
@@ -246,5 +265,6 @@ if (require.main === module) {
 // Exportar para uso como módulo
 module.exports = {
   crearUsuariosAdmin,
-  initPool
+  initPool,
+  ensureRolesAdicionalesColumn
 };

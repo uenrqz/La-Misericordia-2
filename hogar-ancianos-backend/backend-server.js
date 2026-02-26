@@ -98,7 +98,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // Importar scripts para configuración inicial
-const { crearUsuariosAdmin, initPool } = require('./scripts/crear_usuarios_admin');
+const { crearUsuariosAdmin, ensureRolesAdicionalesColumn, initPool } = require('./scripts/crear_usuarios_admin');
 const { sincronizarRoles } = require('./scripts/sincronizar_roles');
 
 // Configurar usuarios administradores al iniciar (en cualquier entorno)
@@ -109,6 +109,9 @@ const { sincronizarRoles } = require('./scripts/sincronizar_roles');
     
     // Inicializar con el pool existente para evitar conexiones duplicadas
     initPool({ pool });
+
+    // Asegurar que la columna roles_adicionales exista antes de usarla
+    await ensureRolesAdicionalesColumn();
     
     // Sincronizar roles disponibles en el sistema
     await sincronizarRoles();
