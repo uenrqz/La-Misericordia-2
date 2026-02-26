@@ -3,6 +3,7 @@
  * Este módulo proporciona herramientas para detectar, diagnosticar y recuperarse
  * de errores 500 (Internal Server Error) en la comunicación con el BFF y el backend.
  */
+import { getBffApiBaseUrl } from '../services/bff.config';
 
 /**
  * Detecta y maneja errores 500 en las peticiones fetch
@@ -187,8 +188,7 @@ export async function recuperarDeErrores500() {
   try {
     // 1. Verificar conectividad con el BFF usando la ruta de estado
     console.log('Verificando conexión con el BFF...');
-    const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-    const baseUrl = `${BFF_URL}/api/bff`;
+    const baseUrl = getBffApiBaseUrl();
     
     console.log(`URL de verificación del BFF: ${baseUrl}/status`);
       
@@ -216,8 +216,7 @@ export async function recuperarDeErrores500() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-        const baseUrl = `${BFF_URL}/api/bff`;
+        const baseUrl = getBffApiBaseUrl();
           
         const tokenCheck = await fetch(`${baseUrl}/auth/verify`, {
           method: 'GET',

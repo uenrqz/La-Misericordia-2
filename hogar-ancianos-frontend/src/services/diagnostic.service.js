@@ -1,5 +1,6 @@
 import { fetchWithErrorHandling, diagnosticarErrores500, recuperarDeErrores500 } from '../utils/errorHandler';
 import apiClient from './api.config';
+import { getBffApiBaseUrl } from './bff.config';
 
 /**
  * Servicio para realizar diagnóstico del sistema
@@ -10,7 +11,7 @@ const diagnosticService = {
    */
   checkBffConnection: async () => {
     try {
-      const response = await fetchWithErrorHandling('${import.meta.env.VITE_BFF_URL}/api/bff/status', { 
+      const response = await fetchWithErrorHandling(`${getBffApiBaseUrl()}/status`, { 
         method: 'GET',
         timeout: 5000,
         maxRetries: 1
@@ -50,7 +51,7 @@ const diagnosticService = {
    */
   checkBackendConnection: async () => {
     try {
-      const response = await fetchWithErrorHandling('${import.meta.env.VITE_BFF_URL}/api/bff/diagnostic/backend-status', { 
+      const response = await fetchWithErrorHandling(`${getBffApiBaseUrl()}/diagnostic/backend-status`, { 
         method: 'GET',
         timeout: 5000,
         maxRetries: 1

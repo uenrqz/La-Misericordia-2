@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { fetchWithErrorHandling, recuperarDeErrores500 } from '../utils/errorHandler';
+import { getBffApiBaseUrl } from './bff.config';
 
 // Configuración base para las peticiones API
-// Obtener la URL del BFF desde variables de entorno con fallback a producción
-const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-const API_URL = `${BFF_URL}/api/bff`;
+const API_URL = getBffApiBaseUrl();
 
 console.log('🔧 API Service - URL configurada:', API_URL);
 

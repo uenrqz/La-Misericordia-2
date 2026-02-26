@@ -1,11 +1,9 @@
 import axios from 'axios';
-
-// Obtener la URL base desde variables de entorno
-const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+import { getBffApiBaseUrl } from './bff.config';
 
 // Configuración base para las peticiones HTTP
 const apiClient = axios.create({
-  baseURL: `${BFF_URL}/api/bff`,
+  baseURL: getBffApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
   },

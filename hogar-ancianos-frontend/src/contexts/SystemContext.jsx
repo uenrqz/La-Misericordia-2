@@ -9,6 +9,7 @@ import SystemNotification, {
 import { recuperarDeErrores500, diagnosticarErrores500 } from '../utils/errorHandler';
 import apiClient from '../services/api.service';
 import tokenRefreshManager from '../utils/tokenRefreshManager';
+import { getBffApiBaseUrl } from '../services/bff.config';
 
 // Crear contexto
 const SystemContext = createContext();
@@ -93,9 +94,7 @@ export const SystemProvider = ({ children }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      // URL del BFF desde variables de entorno
-      const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-      const baseUrl = `${BFF_URL}/api/bff`;
+      const baseUrl = getBffApiBaseUrl();
       
       console.log(`Consultando estado del sistema en: ${baseUrl}/status`);
       
@@ -150,10 +149,7 @@ export const SystemProvider = ({ children }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      // URL dinámica basada en el entorno
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? '${import.meta.env.VITE_BFF_URL}/api/bff' 
-        : `${window.location.protocol}//${window.location.hostname}/api/bff`;
+      const baseUrl = getBffApiBaseUrl();
       
       const response = await fetch(`${baseUrl}/status`, {
         method: 'GET',

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSystem } from '../contexts/SystemContext';
 import tokenRefreshManager from '../utils/tokenRefreshManager';
+import { getBffApiBaseUrl } from '../services/bff.config';
 
 // Configuración de URL del BFF
-const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-const API_BASE_URL = `${BFF_URL}/api/bff`;
+const API_BASE_URL = getBffApiBaseUrl();
 
 /**
  * Componente de Diagnóstico Avanzado del Sistema

@@ -1,9 +1,9 @@
 import axios from 'axios';
+import { getBffApiRootUrl } from './bff.config';
 
 // URL base de la API para servicios de donación/SAT
 // Usar la misma configuración que otros servicios (BFF)
-const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-const API_URL = `${BFF_URL}/api/donaciones`;
+const API_URL = `${getBffApiRootUrl()}/donaciones`;
 
 console.log('🔧 SAT Service - URL configurada:', API_URL);
 

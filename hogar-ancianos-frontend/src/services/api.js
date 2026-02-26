@@ -1,17 +1,14 @@
 import axios from 'axios';
-
-// Crear instancia de axios con configuración base
-// Usar el BFF en producción
-const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
+import { getBffApiRootUrl } from './bff.config';
 const api = axios.create({
-  baseURL: `${BFF_URL}/api`,
+  baseURL: getBffApiRootUrl(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-console.log('🔧 API Client - URL configurada:', `${BFF_URL}/api`);
+console.log('🔧 API Client - URL configurada:', getBffApiRootUrl());
 
 // Interceptor para agregar token de autenticación
 api.interceptors.request.use(

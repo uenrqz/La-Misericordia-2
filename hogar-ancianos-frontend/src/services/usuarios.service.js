@@ -2,6 +2,7 @@
  * Servicio para gestionar usuarios en el frontend
  */
 import apiClient from './api.config';
+import { getBffApiBaseUrl } from './bff.config';
 
 const usuariosService = {
   /**
@@ -23,9 +24,7 @@ const usuariosService = {
         return usuariosService._cachedPublicUsers;
       }
       
-      // Obtener la URL base del BFF desde las variables de entorno
-      const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-      const url = `${BFF_URL}/api/bff/usuarios/public`;
+      const url = `${getBffApiBaseUrl()}/usuarios/public`;
       
       // Desactivar logs en producción para reducir consumo de memoria
       if (process.env.NODE_ENV !== 'production') {
@@ -135,9 +134,7 @@ const usuariosService = {
       console.log('📡 Enviando petición al servidor...');
       
       // Usar fetch directamente para tener más control sobre la petición
-      const BFF_URL = import.meta.env.VITE_BFF_URL || 'https://hogar-ancianos-bff.onrender.com';
-      const baseURL = `${BFF_URL}/api/bff`;
-      const url = `${baseURL}/usuarios`;  
+      const url = `${getBffApiBaseUrl()}/usuarios`;  
       
       const token = localStorage.getItem('token');
       if (!token) {
