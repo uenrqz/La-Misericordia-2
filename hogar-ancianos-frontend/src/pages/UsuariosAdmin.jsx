@@ -390,7 +390,7 @@ const UsuariosAdmin = () => {
     switch (modalTipo) {
       case 'crear':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold">Crear Nuevo Usuario</h2>
             
             <div className="mb-4">
@@ -552,7 +552,7 @@ const UsuariosAdmin = () => {
         
       case 'editar':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold">Editar Usuario</h2>
             
             <div className="mb-4">
@@ -683,7 +683,7 @@ const UsuariosAdmin = () => {
         
       case 'eliminar':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold">Confirmar Eliminación</h2>
             
             <p className="text-gray-600">
@@ -717,7 +717,7 @@ const UsuariosAdmin = () => {
         
       case 'password':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold">Cambiar Contraseña</h2>
             
             {usuarioEsAdmin() && usuarioSeleccionado?.id !== JSON.parse(localStorage.getItem('user')).id ? (
@@ -793,7 +793,7 @@ const UsuariosAdmin = () => {
         
       case 'solicitudes':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold">Solicitudes Pendientes</h2>
             
             {solicitudes.length === 0 ? (
@@ -891,24 +891,24 @@ const UsuariosAdmin = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th className="hidden lg:table-cell px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-                <th className="hidden sm:table-cell px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th className="px-6 lg:px-8 py-4 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                <th className="px-6 lg:px-8 py-4 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th className="hidden lg:table-cell px-6 lg:px-8 py-4 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 lg:px-8 py-4 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                <th className="hidden sm:table-cell px-6 lg:px-8 py-4 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th className="px-6 lg:px-8 py-4 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {usuarios.map((usuario) => (
                 <tr key={usuario.id} className={!usuario.activo ? 'bg-gray-100' : ''}>
-                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
+                  <td className="px-6 lg:px-8 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-sm font-bold">
+                      <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-base font-bold">
                         {usuario.nombre.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm lg:text-base font-medium text-gray-900 truncate">
+                        <div className="text-base lg:text-lg font-medium text-gray-900 truncate">
                           {usuario.username}
                         </div>
                         {usuario.cambio_password_requerido && (
@@ -919,14 +919,14 @@ const UsuariosAdmin = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <div className="text-sm lg:text-base text-gray-900 truncate">{usuario.nombre} {usuario.apellido}</div>
+                  <td className="px-6 lg:px-8 py-4 whitespace-nowrap">
+                    <div className="text-base lg:text-lg text-gray-900 truncate">{usuario.nombre} {usuario.apellido}</div>
                   </td>
-                  <td className="hidden lg:table-cell px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <div className="text-sm lg:text-base text-gray-900 truncate">{usuario.email || '-'}</div>
+                  <td className="hidden lg:table-cell px-6 lg:px-8 py-4 whitespace-nowrap">
+                    <div className="text-base lg:text-lg text-gray-900 truncate">{usuario.email || '-'}</div>
                   </td>
-                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
+                  <td className="px-6 lg:px-8 py-4 whitespace-nowrap">
+                    <span className={`px-3 py-1.5 inline-flex text-base leading-5 font-semibold rounded-full 
                       ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
                         usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
                         usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
@@ -939,43 +939,43 @@ const UsuariosAdmin = () => {
                        usuario.rol === 'secretaria' ? 'Sec.' : usuario.rol}
                     </span>
                   </td>
-                  <td className="hidden sm:table-cell px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
+                  <td className="hidden sm:table-cell px-6 lg:px-8 py-4 whitespace-nowrap">
+                    <span className={`px-3 py-1.5 inline-flex text-base leading-5 font-semibold rounded-full 
                       ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {usuario.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-right">
-                    <div className="flex justify-end gap-2">
+                  <td className="px-6 lg:px-8 py-4 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-3">
                       <button
                         onClick={() => abrirModalEditar(usuario)}
-                        className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
+                        className="p-2.5 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
                         title="Editar usuario"
                       >
-                        <FaEdit size={16} />
+                        <FaEdit size={18} />
                       </button>
                       <button
                         onClick={() => abrirModalPassword(usuario)}
-                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
+                        className="p-2.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
                         title="Cambiar contraseña"
                       >
-                        <FaLock size={16} />
+                        <FaLock size={18} />
                       </button>
                       {usuarioEsAdmin() && usuario.id !== JSON.parse(localStorage.getItem('user')).id && (
                         <>
                           <button
                             onClick={() => toggleEstadoUsuario(usuario)}
-                            className={`p-2 rounded ${usuario.activo ? 'text-red-600 hover:text-red-900 hover:bg-red-50' : 'text-green-600 hover:text-green-900 hover:bg-green-50'}`}
+                            className={`p-2.5 rounded ${usuario.activo ? 'text-red-600 hover:text-red-900 hover:bg-red-50' : 'text-green-600 hover:text-green-900 hover:bg-green-50'}`}
                             title={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
                           >
-                            {usuario.activo ? <FaTimes size={16} /> : <FaCheck size={16} />}
+                            {usuario.activo ? <FaTimes size={18} /> : <FaCheck size={18} />}
                           </button>
                           <button
                             onClick={() => abrirModalEliminar(usuario)}
-                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                            className="p-2.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
                             title="Eliminar usuario"
                           >
-                            <FaTrash size={16} />
+                            <FaTrash size={18} />
                           </button>
                         </>
                       )}
@@ -988,20 +988,20 @@ const UsuariosAdmin = () => {
         </div>
 
         {/* Vista Mobile - Tarjetas */}
-        <div className="md:hidden space-y-4">
+        <div className="md:hidden space-y-5">
           {usuarios.map((usuario) => (
-            <div key={usuario.id} className={`border rounded-lg p-4 ${!usuario.activo ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
-              <div className="flex items-start justify-between gap-3 mb-3">
+            <div key={usuario.id} className={`border rounded-lg p-5 ${!usuario.activo ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-sm font-bold">
+                  <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-base font-bold">
                     {usuario.nombre.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-base font-medium text-gray-900 truncate">{usuario.username}</p>
-                    <p className="text-sm text-gray-600 truncate">{usuario.nombre} {usuario.apellido}</p>
+                    <p className="text-lg font-medium text-gray-900 truncate">{usuario.username}</p>
+                    <p className="text-base text-gray-600 truncate">{usuario.nombre} {usuario.apellido}</p>
                   </div>
                 </div>
-                <span className={`flex-shrink-0 px-2 py-1 text-sm font-semibold rounded-full
+                <span className={`flex-shrink-0 px-3 py-1.5 text-base font-semibold rounded-full
                   ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
                     usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
                     usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
@@ -1016,31 +1016,31 @@ const UsuariosAdmin = () => {
               </div>
               
               {usuario.email && (
-                <p className="text-sm text-gray-600 mb-2 truncate">Email: {usuario.email}</p>
+                <p className="text-base text-gray-600 mb-3 truncate">Email: {usuario.email}</p>
               )}
               
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm font-semibold rounded-full px-2 py-1
+              <div className="flex items-center justify-between mb-4">
+                <span className={`text-base font-semibold rounded-full px-3 py-1.5
                   ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                   {usuario.activo ? 'Activo' : 'Inactivo'}
                 </span>
                 {usuario.cambio_password_requerido && (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 rounded-full px-2 py-1">
+                  <span className="text-sm bg-yellow-100 text-yellow-800 rounded-full px-3 py-1.5">
                     Cambio pwd
                   </span>
                 )}
               </div>
               
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-3 flex-wrap">
                 <button
                   onClick={() => abrirModalEditar(usuario)}
-                  className="flex-1 min-w-[70px] px-2 py-2 text-sm font-medium text-primary-600 border border-primary-600 rounded hover:bg-primary-50"
+                  className="flex-1 min-w-[70px] px-3 py-2.5 text-base font-medium text-primary-600 border border-primary-600 rounded hover:bg-primary-50"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => abrirModalPassword(usuario)}
-                  className="flex-1 min-w-[70px] px-2 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
+                  className="flex-1 min-w-[70px] px-3 py-2.5 text-base font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
                 >
                   Pwd
                 </button>
@@ -1048,13 +1048,13 @@ const UsuariosAdmin = () => {
                   <>
                     <button
                       onClick={() => toggleEstadoUsuario(usuario)}
-                      className={`flex-1 min-w-[70px] px-2 py-2 text-sm font-medium rounded border ${usuario.activo ? 'text-red-600 border-red-600 hover:bg-red-50' : 'text-green-600 border-green-600 hover:bg-green-50'}`}
+                      className={`flex-1 min-w-[70px] px-3 py-2.5 text-base font-medium rounded border ${usuario.activo ? 'text-red-600 border-red-600 hover:bg-red-50' : 'text-green-600 border-green-600 hover:bg-green-50'}`}
                     >
                       {usuario.activo ? 'Desact.' : 'Act.'}
                     </button>
                     <button
                       onClick={() => abrirModalEliminar(usuario)}
-                      className="flex-1 min-w-[70px] px-2 py-2 text-sm font-medium text-red-600 border border-red-600 rounded hover:bg-red-50"
+                      className="flex-1 min-w-[70px] px-3 py-2.5 text-base font-medium text-red-600 border border-red-600 rounded hover:bg-red-50"
                     >
                       Elim.
                     </button>
@@ -1069,8 +1069,8 @@ const UsuariosAdmin = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <div className="bg-white rounded-lg shadow-md p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 mb-8">
         <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 flex items-center">
           <FaUsers className="mr-2" /> Usuarios
         </h1>
@@ -1104,7 +1104,7 @@ const UsuariosAdmin = () => {
       {/* Modal */}
       {modalVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto p-6 sm:p-8 relative">
             {renderFormulario()}
           </div>
         </div>
