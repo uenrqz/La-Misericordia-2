@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { pool } = require('../config/db');
 
 /**
  * Obtener todas las evoluciones de un residente
@@ -40,7 +40,7 @@ exports.getEvolucionesByResidente = async (req, res) => {
     // Ordenar por fecha de registro descendente (más reciente primero)
     query += ` ORDER BY e.fecha_registro DESC`;
     
-    const result = await db.query(query, params);
+    const result = await pool.query(query, params);
     
     // Para cada evolución que tenga orden_medica_id, obtener los detalles básicos de la orden
     for (const evolucion of result.rows) {
@@ -50,7 +50,7 @@ exports.getEvolucionesByResidente = async (req, res) => {
           FROM ordenes_medicas
           WHERE id = $1
         `;
-        const ordenResult = await db.query(ordenQuery, [evolucion.orden_medica_id]);
+        const ordenResult = await pool.query(ordenQuery, [evolucion.orden_medica_id]);
         if (ordenResult.rows.length > 0) {
           evolucion.orden_medica = ordenResult.rows[0];
         }
@@ -73,7 +73,7 @@ exports.createEvolucion = async (req, res) => {
     const { descripcion, tipo_evolucion, orden_medica_id } = req.body;
     
     // Verificar si el residente existe
-    const checkResidente = await db.query('SELECT id FROM ancianos WHERE id = $1', [id]);
+    const checkResidente = await pool.query('SELECT id FROM ancianos WHERE id = $1', [id]);
     if (checkResidente.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
@@ -88,7 +88,7 @@ exports.createEvolucion = async (req, res) => {
     
     // Si hay orden_medica_id, verificar que existe y pertenece a este residente
     if (orden_medica_id) {
-      const checkOrden = await db.query(
+      const checkOrden = await pool.query(
         'SELECT id FROM ordenes_medicas WHERE id = $1 AND anciano_id = $2',
         [orden_medica_id, id]
       );
@@ -119,7 +119,7 @@ exports.createEvolucion = async (req, res) => {
       orden_medica_id || null
     ];
     
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
     
     // Obtener datos del usuario que creó la evolución
     const usuarioQuery = `
@@ -128,7 +128,7 @@ exports.createEvolucion = async (req, res) => {
       WHERE id = $1
     `;
     
-    const usuarioResult = await db.query(usuarioQuery, [req.user.id]);
+    const usuarioResult = await pool.query(usuarioQuery, [req.user.id]);
     
     // Combinar resultados
     const evolucionConUsuario = {
@@ -155,7 +155,7 @@ exports.updateEvolucion = async (req, res) => {
     const { descripcion } = req.body;
     
     // Verificar si la evolución existe y pertenece a este residente
-    const checkEvolucion = await db.query(
+    const checkEvolucion = await pool.query(
       'SELECT * FROM evoluciones WHERE id = $1 AND anciano_id = $2',
       [evolucionId, id]
     );
@@ -202,7 +202,7 @@ exports.updateEvolucion = async (req, res) => {
       RETURNING *
     `;
     
-    const result = await db.query(query, [descripcion, evolucionId]);
+    const result = await pool.query(query, [descripcion, evolucionId]);
     
     // Obtener datos del usuario que creó la evolución
     const usuarioQuery = `
@@ -211,7 +211,7 @@ exports.updateEvolucion = async (req, res) => {
       WHERE id = $1
     `;
     
-    const usuarioResult = await db.query(usuarioQuery, [evolucion.usuario_id]);
+    const usuarioResult = await pool.query(usuarioQuery, [evolucion.usuario_id]);
     
     // Combinar resultados
     const evolucionActualizada = {
@@ -243,7 +243,7 @@ exports.deleteEvolucion = async (req, res) => {
     }
     
     // Verificar si la evolución existe y pertenece a este residente
-    const checkEvolucion = await db.query(
+    const checkEvolucion = await pool.query(
       'SELECT * FROM evoluciones WHERE id = $1 AND anciano_id = $2',
       [evolucionId, id]
     );
@@ -252,7 +252,7 @@ exports.deleteEvolucion = async (req, res) => {
       return res.status(404).json({ message: `Evolución no encontrada` });
     }
     
-    await db.query('DELETE FROM evoluciones WHERE id = $1', [evolucionId]);
+    await pool.query('DELETE FROM evoluciones WHERE id = $1', [evolucionId]);
     
     res.json({ message: 'Evolución eliminada correctamente' });
   } catch (err) {

@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { pool } = require('../config/db');
 
 /**
  * Obtener los signos vitales de un residente específico
@@ -31,7 +31,7 @@ exports.getSignosVitalesByResidente = async (req, res) => {
     
     query += ` ORDER BY sv.fecha_registro DESC`;
     
-    const result = await db.query(query, params);
+    const result = await pool.query(query, params);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: `No se encontraron signos vitales para el residente con ID ${id}` });
@@ -62,7 +62,7 @@ exports.createSignosVitales = async (req, res) => {
     } = req.body;
     
     // Verificar si el residente existe
-    const checkResidente = await db.query('SELECT id FROM ancianos WHERE id = $1', [id]);
+    const checkResidente = await pool.query('SELECT id FROM ancianos WHERE id = $1', [id]);
     if (checkResidente.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
@@ -103,7 +103,7 @@ exports.createSignosVitales = async (req, res) => {
       req.user.id // ID del usuario que registra los signos vitales
     ];
     
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
     
     // Registrar en tabla de notificaciones si algún signo vital está fuera de rango
     let requiereNotificacion = false;
@@ -122,15 +122,15 @@ exports.createSignosVitales = async (req, res) => {
     // Si hay valores fuera de rango, crear notificación para el médico
     if (requiereNotificacion) {
       // Obtener IDs de usuarios con rol médico
-      const medicos = await db.query(`SELECT id FROM usuarios WHERE rol = 'medico'`);
+      const medicos = await pool.query(`SELECT id FROM usuarios WHERE rol = 'medico'`);
       
       if (medicos.rows.length > 0) {
         // Obtener datos del residente para la notificación
-        const residente = await db.query(`SELECT nombre, apellido FROM ancianos WHERE id = $1`, [id]);
+        const residente = await pool.query(`SELECT nombre, apellido FROM ancianos WHERE id = $1`, [id]);
         
         // Para cada médico, crear una notificación
         for (const medico of medicos.rows) {
-          await db.query(
+          await pool.query(
             `INSERT INTO notificaciones 
             (usuario_id, mensaje, tipo, enlace) 
             VALUES ($1, $2, 'alerta_signos_vitales', $3)`,
@@ -170,7 +170,7 @@ exports.updateSignosVitales = async (req, res) => {
     } = req.body;
     
     // Verificar si el registro existe y es del mismo día
-    const checkSignoVital = await db.query(
+    const checkSignoVital = await pool.query(
       `SELECT * FROM signos_vitales 
        WHERE id = $1 AND anciano_id = $2 
        AND DATE(fecha_registro) = CURRENT_DATE`,
@@ -249,7 +249,7 @@ exports.updateSignosVitales = async (req, res) => {
       RETURNING *
     `;
     
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error al actualizar signos vitales:', err);
@@ -267,7 +267,7 @@ exports.getEstadisticasSignosVitales = async (req, res) => {
     const { tipoEstadistica, dias = 7 } = req.query;
     
     // Verificar si el residente existe
-    const checkResidente = await db.query('SELECT id FROM ancianos WHERE id = $1', [id]);
+    const checkResidente = await pool.query('SELECT id FROM ancianos WHERE id = $1', [id]);
     if (checkResidente.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
@@ -332,7 +332,7 @@ exports.getEstadisticasSignosVitales = async (req, res) => {
       `;
     }
     
-    const result = await db.query(query, [id]);
+    const result = await pool.query(query, [id]);
     
     res.json(result.rows);
   } catch (err) {

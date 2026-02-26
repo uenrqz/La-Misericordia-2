@@ -50,11 +50,11 @@ async function verificarBaseDatos() {
   
   try {
     // Importamos el cliente de base de datos
-    const db = require('../config/db');
+    const { pool } = require('../config/db');
     
     // Realizar una consulta simple para verificar la conexión
     const startTime = Date.now();
-    const result = await db.query('SELECT NOW() as now');
+    const result = await pool.query('SELECT NOW() as now');
     const timeElapsed = Date.now() - startTime;
     
     console.log(`${colors.green}Conexión exitosa a la base de datos${colors.reset}`);

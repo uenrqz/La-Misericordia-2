@@ -1,5 +1,4 @@
 const axios = require('axios');
-const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const soutConfig = require('../config/sout');
 const { generateToken } = require('../middlewares/auth.middleware');
@@ -40,7 +39,7 @@ exports.soutCallback = async (req, res) => {
     });
 
     // Verificar si el usuario existe en nuestra base de datos
-    const { rows } = await db.query(
+    const { rows } = await pool.query(
       'SELECT * FROM usuarios WHERE email = $1',
       [userInfo.data.email]
     );
@@ -49,7 +48,7 @@ exports.soutCallback = async (req, res) => {
     
     if (rows.length === 0) {
       // Usuario no existe, crear uno nuevo
-      const result = await db.query(
+      const result = await pool.query(
         'INSERT INTO usuarios (username, nombre, apellido, email, rol, password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
         [
           userInfo.data.username || userInfo.data.email.split('@')[0],

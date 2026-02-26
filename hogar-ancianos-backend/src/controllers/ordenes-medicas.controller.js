@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { pool } = require('../config/db');
 
 /**
  * Obtener todas las órdenes médicas de un residente
@@ -27,7 +27,7 @@ exports.getOrdenesMedicasByResidente = async (req, res) => {
     // Ordenar por fecha más reciente primero
     query += ` ORDER BY om.fecha_orden DESC`;
     
-    const result = await db.query(query, params);
+    const result = await pool.query(query, params);
     
     res.json(result.rows);
   } catch (err) {
@@ -50,7 +50,7 @@ exports.getOrdenMedicaById = async (req, res) => {
       WHERE om.id = $1 AND om.anciano_id = $2
     `;
     
-    const result = await db.query(query, [ordenId, id]);
+    const result = await pool.query(query, [ordenId, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: `Orden médica no encontrada` });
@@ -64,7 +64,7 @@ exports.getOrdenMedicaById = async (req, res) => {
       WHERE mr.orden_medica_id = $1
     `;
     
-    const medicamentosResult = await db.query(medicamentosQuery, [ordenId]);
+    const medicamentosResult = await pool.query(medicamentosQuery, [ordenId]);
     
     // Combinar resultados
     const ordenMedica = {
@@ -101,7 +101,7 @@ exports.createOrdenMedica = async (req, res) => {
     }
     
     // Verificar si el residente existe
-    const checkResidente = await db.query('SELECT id FROM ancianos WHERE id = $1', [id]);
+    const checkResidente = await pool.query('SELECT id FROM ancianos WHERE id = $1', [id]);
     if (checkResidente.rows.length === 0) {
       return res.status(404).json({ message: `Residente con ID ${id} no encontrado` });
     }
@@ -263,7 +263,7 @@ exports.updateOrdenMedica = async (req, res) => {
     } = req.body;
     
     // Verificar si la orden existe y pertenece a este residente
-    const checkOrden = await db.query(
+    const checkOrden = await pool.query(
       'SELECT * FROM ordenes_medicas WHERE id = $1 AND anciano_id = $2',
       [ordenId, id]
     );
@@ -316,11 +316,11 @@ exports.updateOrdenMedica = async (req, res) => {
       RETURNING *
     `;
     
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
     
     // Si se cambió el estado a inactivo, actualizar estado de medicamentos asociados
     if (estado === 'inactivo') {
-      await db.query(
+      await pool.query(
         `UPDATE medicamentos_residentes 
          SET estado = 'inactivo' 
          WHERE orden_medica_id = $1`,
@@ -328,7 +328,7 @@ exports.updateOrdenMedica = async (req, res) => {
       );
       
       // Registrar en evolución
-      await db.query(
+      await pool.query(
         `INSERT INTO evoluciones (
           anciano_id,
           descripcion,
@@ -367,7 +367,7 @@ exports.deleteOrdenMedica = async (req, res) => {
     }
     
     // Verificar si la orden existe y pertenece a este residente
-    const checkOrden = await db.query(
+    const checkOrden = await pool.query(
       'SELECT * FROM ordenes_medicas WHERE id = $1 AND anciano_id = $2',
       [ordenId, id]
     );
@@ -377,7 +377,7 @@ exports.deleteOrdenMedica = async (req, res) => {
     }
     
     // Eliminar en cascada (los medicamentos asociados se eliminarán por la restricción ON DELETE CASCADE)
-    await db.query('DELETE FROM ordenes_medicas WHERE id = $1', [ordenId]);
+    await pool.query('DELETE FROM ordenes_medicas WHERE id = $1', [ordenId]);
     
     res.json({ message: `Orden médica eliminada correctamente` });
   } catch (err) {
