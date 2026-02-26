@@ -17,6 +17,8 @@ import SignosVitales from './pages/SignosVitales';
 import OrdenesMedicas from './pages/OrdenesMedicas';
 import Donaciones from './pages/Donaciones';
 import Reportes from './pages/Reportes';
+import LibroDiario from './pages/LibroDiario';
+import CalendarioPagos from './pages/CalendarioPagos';
 import DetalleResidente from './pages/DetalleResidente';
 import Evoluciones from './pages/Evoluciones';
 import EnfermeriaDashboard from './pages/EnfermeriaDashboard';
@@ -63,6 +65,8 @@ function App() {
             <Route path="evoluciones" element={<Evoluciones />} />
             <Route path="donaciones" element={<Donaciones />} />
             <Route path="reportes" element={<Reportes />} />
+            <Route path="libro-diario" element={<LibroDiario />} />
+            <Route path="calendario-pagos" element={<CalendarioPagos />} />
             <Route path="usuarios" element={<UsuariosAdmin />} />
             <Route path="diagnostico" element={
               <RequireAuth>

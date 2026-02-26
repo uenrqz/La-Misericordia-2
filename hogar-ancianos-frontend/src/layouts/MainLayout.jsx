@@ -196,6 +196,30 @@ const MainLayout = () => {
             </Link>
           </li>
         )}
+        {/* Libro Diario - Solo visible para admin */}
+        {role === 'admin' && (
+          <li>
+            <Link
+              to="/app/libro-diario"
+              className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${location.pathname === '/app/libro-diario' ? 'bg-primary-100 text-primary-600' : ''}`}
+            >
+              <i className="fas fa-book w-5 h-5 text-dark-300 group-hover:text-primary-600"></i>
+              <span className="ms-3">Libro Diario</span>
+            </Link>
+          </li>
+        )}
+        {/* Calendario de Pagos - Solo visible para admin */}
+        {role === 'admin' && (
+          <li>
+            <Link
+              to="/app/calendario-pagos"
+              className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${location.pathname === '/app/calendario-pagos' ? 'bg-primary-100 text-primary-600' : ''}`}
+            >
+              <i className="fas fa-calendar-check w-5 h-5 text-dark-300 group-hover:text-primary-600"></i>
+              <span className="ms-3">Calendario de Pagos</span>
+            </Link>
+          </li>
+        )}
         {/* Reportes - Solo visible para admin */}
         {role === 'admin' && (
           <li>
