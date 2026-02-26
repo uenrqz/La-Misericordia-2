@@ -23,7 +23,7 @@ const httpsAgent = new https.Agent({
 // Configuración de Axios para el backend
 const apiClient = axios.create({
   baseURL: process.env.API_URL || 'http://localhost:3000',
-  timeout: parseInt(process.env.API_TIMEOUT) || 10000, // 10 segundos por defecto
+  timeout: parseInt(process.env.API_TIMEOUT) || 30000, // 30 segundos (Render puede tardar 30s en despertar)
   headers: {
     'Content-Type': 'application/json',
   },
@@ -61,23 +61,53 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar respuestas y errores
+// Función auxiliar: esperar N milisegundos
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Interceptor para manejar respuestas y errores con reintentos automáticos
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 4000; // 4 segundos entre reintentos (Render tarda ~20-30s en despertar)
+const RETRY_STATUS_CODES = [502, 503, 504]; // Códigos que indican backend dormido/no disponible
+
 apiClient.interceptors.response.use(
   response => {
     console.log(`[BFF API] Respuesta exitosa de ${response.config.method.toUpperCase()} ${response.config.url}: ${response.status}`);
     return response;
   },
-  error => {
+  async error => {
+    const config = error.config;
+
+    // Inicializar contador de reintentos
+    if (!config) {
+      return Promise.reject(error);
+    }
+    config._retryCount = config._retryCount || 0;
+
+    const status = error.response?.status;
+    const isRetryable = RETRY_STATUS_CODES.includes(status) || 
+                        error.code === 'ECONNABORTED' || 
+                        error.code === 'ECONNRESET' ||
+                        error.code === 'ETIMEDOUT';
+
+    if (isRetryable && config._retryCount < MAX_RETRIES) {
+      config._retryCount += 1;
+      const delay = RETRY_DELAY_MS * config._retryCount; // Backoff: 4s, 8s, 12s
+      console.warn(`[BFF API] Backend respondió ${status || error.code} en ${config.url}. Reintento ${config._retryCount}/${MAX_RETRIES} en ${delay/1000}s... (Backend posiblemente despertando en Render)`);
+      await sleep(delay);
+      return apiClient(config);
+    }
+
     if (error.response) {
-      console.error(`[BFF API] Error ${error.response.status} en petición a ${error.config?.url}:`, {
-        data: error.response.data,
-        headers: error.response.headers,
+      console.error(`[BFF API] Error ${error.response.status} en petición a ${config?.url} (reintentos agotados o error no reintentable):`, {
+        status: error.response.status,
+        data: typeof error.response.data === 'string' ? error.response.data.substring(0, 200) : error.response.data,
       });
     } else if (error.request) {
       console.error('[BFF API] No se recibió respuesta del backend:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        timeout: error.config?.timeout
+        url: config?.url,
+        method: config?.method,
+        timeout: config?.timeout,
+        code: error.code
       });
     } else {
       console.error('[BFF API] Error al configurar la petición:', error.message);
