@@ -28,7 +28,7 @@ router.get('/public', async (req, res) => {
  * @desc    Obtener solicitudes pendientes de administrador
  * @access  Private (admin)
  */
-router.get('/admin/solicitudes', authenticate(['admin']), async (req, res) => {
+router.get('/admin/solicitudes', authenticate(), async (req, res) => {
   try {
     const solicitudes = await usuariosService.obtenerSolicitudesAdmin(`Bearer ${req.user.originalToken}`);
     res.json(solicitudes);
@@ -45,7 +45,7 @@ router.get('/admin/solicitudes', authenticate(['admin']), async (req, res) => {
  * @desc    Obtener todos los usuarios
  * @access  Private (admin)
  */
-router.get('/', authenticate(['admin']), async (req, res) => {
+router.get('/', authenticate(), async (req, res) => {
   try {
     const usuarios = await usuariosService.obtenerUsuarios(`Bearer ${req.user.originalToken}`);
     res.json(usuarios);
@@ -62,10 +62,13 @@ router.get('/', authenticate(['admin']), async (req, res) => {
  * @desc    Obtener un usuario por ID
  * @access  Private (admin o el propio usuario)
  */
-router.get('/:id', authenticate(['admin', 'medico', 'enfermera']), async (req, res) => {
+router.get('/:id', authenticate(), async (req, res) => {
   try {
     // Verificar si es el mismo usuario o es admin
-    if (req.user.role !== 'admin' && req.user.id !== parseInt(req.params.id)) {
+    const permisos = Array.isArray(req.user.permisos) ? req.user.permisos : [];
+    const puedeGestionarUsuarios = req.user.role === 'admin' || permisos.includes('usuarios');
+
+    if (!puedeGestionarUsuarios && req.user.id !== parseInt(req.params.id)) {
       return res.status(403).json({ message: 'No tienes permisos para ver este usuario' });
     }
     
@@ -84,7 +87,7 @@ router.get('/:id', authenticate(['admin', 'medico', 'enfermera']), async (req, r
  * @desc    Crear un nuevo usuario
  * @access  Private (admin)
  */
-router.post('/', authenticate(['admin']), async (req, res) => {
+router.post('/', authenticate(), async (req, res) => {
   try {
     console.log('Ruta POST /usuarios: Iniciando creación de usuario', {
       username: req.body?.username,
@@ -162,7 +165,7 @@ router.post('/', authenticate(['admin']), async (req, res) => {
  * @desc    Actualizar un usuario existente
  * @access  Private (admin o el propio usuario)
  */
-router.put('/:id', authenticate(['admin', 'medico', 'enfermera']), async (req, res) => {
+router.put('/:id', authenticate(), async (req, res) => {
   try {
     // Verificar si es el mismo usuario o es admin
     if (req.user.role !== 'admin' && req.user.id !== parseInt(req.params.id)) {
@@ -189,7 +192,7 @@ router.put('/:id', authenticate(['admin', 'medico', 'enfermera']), async (req, r
  * @desc    Eliminar un usuario (soft delete)
  * @access  Private (admin)
  */
-router.delete('/:id', authenticate(['admin']), async (req, res) => {
+router.delete('/:id', authenticate(), async (req, res) => {
   try {
     // No permitir eliminar su propia cuenta
     if (req.user.id === parseInt(req.params.id)) {
@@ -211,7 +214,7 @@ router.delete('/:id', authenticate(['admin']), async (req, res) => {
  * @desc    Cambiar la contraseña de un usuario
  * @access  Private (admin o el propio usuario)
  */
-router.put('/:id/cambiar-password', authenticate(['admin', 'medico', 'enfermera']), async (req, res) => {
+router.put('/:id/cambiar-password', authenticate(), async (req, res) => {
   try {
     // Verificar si es el mismo usuario o es admin
     if (req.user.role !== 'admin' && req.user.id !== parseInt(req.params.id)) {
@@ -233,7 +236,7 @@ router.put('/:id/cambiar-password', authenticate(['admin', 'medico', 'enfermera'
  * @desc    Activar o desactivar un usuario
  * @access  Private (admin)
  */
-router.put('/:id/estado', authenticate(['admin']), async (req, res) => {
+router.put('/:id/estado', authenticate(), async (req, res) => {
   try {
     // No permitir desactivar su propia cuenta
     if (req.user.id === parseInt(req.params.id) && req.body.activo === false) {
@@ -255,7 +258,7 @@ router.put('/:id/estado', authenticate(['admin']), async (req, res) => {
  * @desc    Aprobar o rechazar una solicitud de administrador
  * @access  Private (admin)
  */
-router.post('/admin/solicitudes/:solicitudId/responder', authenticate(['admin']), async (req, res) => {
+router.post('/admin/solicitudes/:solicitudId/responder', authenticate(), async (req, res) => {
   try {
     const { aprobado, comentario } = req.body;
     

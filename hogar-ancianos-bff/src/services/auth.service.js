@@ -100,6 +100,7 @@ class AuthService {
         userId: userData.user.id,
         username: userData.user.username,
         role: userData.user.rol,
+        permisos: Array.isArray(userData.user.permisos) ? userData.user.permisos : [],
         originalToken: userData.token,
         createdAt: new Date().getTime()
       };

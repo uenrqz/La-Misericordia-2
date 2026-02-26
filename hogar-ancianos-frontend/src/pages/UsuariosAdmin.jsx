@@ -3,6 +3,27 @@ import { FaUsers, FaUserPlus, FaEdit, FaTrash, FaLock, FaCheck, FaTimes, FaUserS
 import usuariosService from '../services/usuarios.service';
 import { useSystem } from '../contexts/SystemContext';
 
+const PERMISOS_DISPONIBLES = [
+  { id: 'dashboard_admin', label: 'Dashboard Admin' },
+  { id: 'dashboard_medico', label: 'Dashboard Medico' },
+  { id: 'dashboard_enfermeria', label: 'Dashboard Enfermeria' },
+  { id: 'residentes', label: 'Residentes' },
+  { id: 'signos_vitales', label: 'Signos Vitales' },
+  { id: 'ordenes_medicas', label: 'Ordenes Medicas' },
+  { id: 'evoluciones', label: 'Evoluciones' },
+  { id: 'finanzas', label: 'Finanzas' },
+  { id: 'usuarios', label: 'Usuarios' },
+  { id: 'diagnostico', label: 'Diagnostico del Sistema' }
+];
+
+const PERMISOS_POR_ROL = {
+  admin: PERMISOS_DISPONIBLES.map((permiso) => permiso.id),
+  medico: ['dashboard_medico', 'residentes', 'ordenes_medicas', 'evoluciones'],
+  enfermero: ['dashboard_enfermeria', 'residentes', 'signos_vitales', 'evoluciones'],
+  cuidador: ['residentes'],
+  secretaria: ['residentes']
+};
+
 const UsuariosAdmin = () => {
   const { showNotification } = useSystem();
   const [usuarios, setUsuarios] = useState([]);
@@ -17,7 +38,8 @@ const UsuariosAdmin = () => {
     password: '',
     confirmPassword: '',
     passwordActual: '',
-    rol: 'enfermero'
+    rol: 'enfermero',
+    permisos: []
   });
   const [cargando, setCargando] = useState(false);
   const [solicitudes, setSolicitudes] = useState([]);
@@ -34,7 +56,8 @@ const UsuariosAdmin = () => {
   // Verificar si el usuario actual es administrador
   const usuarioEsAdmin = () => {
     const user = JSON.parse(localStorage.getItem('user')) || {};
-    return user.role === 'admin' || user.rol === 'admin';
+    const permisos = Array.isArray(user?.permisos) ? user.permisos : [];
+    return user.role === 'admin' || user.rol === 'admin' || permisos.includes('usuarios');
   };
 
   // Cargar la lista de usuarios
@@ -73,7 +96,8 @@ const UsuariosAdmin = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      rol: 'enfermero' // Este rol está garantizado en el backend
+      rol: 'enfermero',
+      permisos: PERMISOS_POR_ROL.enfermero // Este rol está garantizado en el backend
     });
     setError(''); // Resetear cualquier error previo
     setModalVisible(true);
@@ -88,7 +112,8 @@ const UsuariosAdmin = () => {
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       email: usuario.email || '',
-      rol: usuario.rol
+      rol: usuario.rol,
+      permisos: Array.isArray(usuario.permisos) ? usuario.permisos : []
     });
     setModalVisible(true);
   };
@@ -122,9 +147,46 @@ const UsuariosAdmin = () => {
   // Manejar cambios en el formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'rol') {
+      const permisosRecomendados = PERMISOS_POR_ROL[value] || [];
+      setFormData({
+        ...formData,
+        [name]: value,
+        permisos: permisosRecomendados
+      });
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]: value
+    });
+  };
+
+  const togglePermiso = (permisoId) => {
+    const permisosActuales = Array.isArray(formData.permisos) ? formData.permisos : [];
+    const nuevosPermisos = permisosActuales.includes(permisoId)
+      ? permisosActuales.filter((permiso) => permiso !== permisoId)
+      : [...permisosActuales, permisoId];
+
+    setFormData({
+      ...formData,
+      permisos: nuevosPermisos
+    });
+  };
+
+  const aplicarPermisosRecomendados = () => {
+    const permisosRecomendados = PERMISOS_POR_ROL[formData.rol] || [];
+    setFormData({
+      ...formData,
+      permisos: permisosRecomendados
+    });
+  };
+
+  const seleccionarTodosLosPermisos = () => {
+    setFormData({
+      ...formData,
+      permisos: PERMISOS_DISPONIBLES.map((permiso) => permiso.id)
     });
   };
 
@@ -163,7 +225,8 @@ const UsuariosAdmin = () => {
         apellido: formData.apellido.trim(),
         email: formData.email.trim(),
         password: formData.password,
-        rol: rolSeleccionado
+        rol: rolSeleccionado,
+        permisos: Array.isArray(formData.permisos) ? formData.permisos : []
       };
 
       console.log("Enviando datos de usuario:", { ...userData, password: '[OCULTA]' });
@@ -217,7 +280,8 @@ const UsuariosAdmin = () => {
         nombre: formData.nombre,
         apellido: formData.apellido,
         email: formData.email,
-        rol: formData.rol
+        rol: formData.rol,
+        permisos: Array.isArray(formData.permisos) ? formData.permisos : []
       };
 
       await usuariosService.updateUsuario(usuarioSeleccionado.id, userData);
@@ -392,6 +456,44 @@ const UsuariosAdmin = () => {
                 <option value="admin">Administrador</option>
               </select>
             </div>
+
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">Permisos</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={aplicarPermisosRecomendados}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Recomendados
+                  </button>
+                  <button
+                    type="button"
+                    onClick={seleccionarTodosLosPermisos}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Todos
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {PERMISOS_DISPONIBLES.map((permiso) => (
+                  <label key={permiso.id} className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(formData.permisos) && formData.permisos.includes(permiso.id)}
+                      onChange={() => togglePermiso(permiso.id)}
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    {permiso.label}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Los permisos recomendados se ajustan automaticamente al rol seleccionado.
+              </p>
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="mb-4">
@@ -516,6 +618,44 @@ const UsuariosAdmin = () => {
                 <option value="secretaria">Secretaria</option>
                 <option value="admin">Administrador</option>
               </select>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">Permisos</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={aplicarPermisosRecomendados}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Recomendados
+                  </button>
+                  <button
+                    type="button"
+                    onClick={seleccionarTodosLosPermisos}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Todos
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {PERMISOS_DISPONIBLES.map((permiso) => (
+                  <label key={permiso.id} className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(formData.permisos) && formData.permisos.includes(permiso.id)}
+                      onChange={() => togglePermiso(permiso.id)}
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    {permiso.label}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Los permisos recomendados se ajustan automaticamente al rol seleccionado.
+              </p>
             </div>
             
             {error && (

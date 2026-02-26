@@ -128,7 +128,8 @@ const usuariosService = {
         apellido: String(userData.apellido).trim(),
         email: String(userData.email).trim(),
         password: userData.password,
-        rol: String(userData.rol).trim()
+        rol: String(userData.rol).trim(),
+        permisos: Array.isArray(userData.permisos) ? userData.permisos : []
       };
       
       console.log('📡 Enviando petición al servidor...');

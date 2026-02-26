@@ -2,6 +2,7 @@ const axios = require('axios');
 const bcrypt = require('bcrypt');
 const soutConfig = require('../config/sout');
 const { generateToken } = require('../middlewares/auth.middleware');
+const { normalizarPermisos, parsePermisos } = require('../config/permisos');
 const { pool } = require('../config/db'); 
 const jwt = require('jsonwebtoken');
 
@@ -64,8 +65,9 @@ exports.soutCallback = async (req, res) => {
       userData = rows[0];
     }
 
-    // Generar token JWT para nuestra aplicación
-    const token = generateToken(userData);
+    // Normalizar permisos para incluirlos en el token
+    const permisos = normalizarPermisos(parsePermisos(userData.permisos), userData.rol);
+    const token = generateToken({ ...userData, permisos });
 
     // Devolver token y datos básicos del usuario
     res.json({
@@ -76,7 +78,8 @@ exports.soutCallback = async (req, res) => {
         nombre: userData.nombre,
         apellido: userData.apellido,
         rol: userData.rol,
-        email: userData.email
+        email: userData.email,
+        permisos
       }
     });
     
@@ -123,12 +126,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
     
-    // Generar token JWT
+    const permisos = normalizarPermisos(parsePermisos(user.permisos), user.rol);
     const token = jwt.sign(
-      { 
-        id: user.id, 
+      {
+        id: user.id,
         username: user.username,
-        rol: user.rol 
+        rol: user.rol,
+        permisos
       },
       process.env.JWT_SECRET || 'secreto_temporal',
       { expiresIn: process.env.JWT_EXPIRATION || '8h' }
@@ -145,7 +149,8 @@ exports.login = async (req, res) => {
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
-        rol: user.rol
+        rol: user.rol,
+        permisos
       }
     });
     
@@ -173,7 +178,8 @@ exports.validateToken = (req, res) => {
       user: {
         id: req.user.id,
         username: req.user.username,
-        rol: req.user.rol
+        rol: req.user.rol,
+        permisos: req.user.permisos || []
       }
     });
   } catch (error) {
@@ -203,7 +209,8 @@ exports.refreshToken = (req, res) => {
       user: {
         id: req.user.id,
         username: req.user.username,
-        rol: req.user.rol
+        rol: req.user.rol,
+        permisos: req.user.permisos || []
       }
     });
   } catch (error) {

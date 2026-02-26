@@ -98,7 +98,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // Importar scripts para configuración inicial
-const { crearUsuariosAdmin, ensureRolesAdicionalesColumn, initPool } = require('./scripts/crear_usuarios_admin');
+const { crearUsuariosAdmin, ensurePermisosColumn, ensureRolesAdicionalesColumn, initPool } = require('./scripts/crear_usuarios_admin');
 const { sincronizarRoles } = require('./scripts/sincronizar_roles');
 
 // Configurar usuarios administradores al iniciar (en cualquier entorno)
@@ -112,6 +112,9 @@ const { sincronizarRoles } = require('./scripts/sincronizar_roles');
 
     // Asegurar que la columna roles_adicionales exista antes de usarla
     await ensureRolesAdicionalesColumn();
+
+    // Asegurar que la columna permisos exista antes de usarla
+    await ensurePermisosColumn();
     
     // Sincronizar roles disponibles en el sistema
     await sincronizarRoles();

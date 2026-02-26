@@ -100,6 +100,7 @@ exports.authenticate = (roles = []) => {
       
       // Actualizar el rol al formato esperado por el backend
       decoded.role = rolMapeado;
+      decoded.permisos = Array.isArray(decoded.permisos) ? decoded.permisos : [];
       
       // Validación del token del backend (opcional, solo si se solicita verificación estricta)
       if (req.query.strict === 'true') {

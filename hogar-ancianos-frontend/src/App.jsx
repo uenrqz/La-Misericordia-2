@@ -38,6 +38,43 @@ const RequireAuth = ({ children }) => {
   return children;
 };
 
+const PERMISOS_POR_ROL = {
+  admin: [
+    'dashboard_admin',
+    'dashboard_medico',
+    'dashboard_enfermeria',
+    'residentes',
+    'signos_vitales',
+    'ordenes_medicas',
+    'evoluciones',
+    'finanzas',
+    'usuarios',
+    'diagnostico'
+  ],
+  medico: ['dashboard_medico', 'residentes', 'ordenes_medicas', 'evoluciones'],
+  enfermero: ['dashboard_enfermeria', 'residentes', 'signos_vitales', 'evoluciones'],
+  cuidador: ['residentes'],
+  secretaria: ['residentes']
+};
+
+const hasPermiso = (user, permiso) => {
+  const role = user?.role || user?.rol;
+  if (role === 'admin') return true;
+  const permisos = Array.isArray(user?.permisos) ? user.permisos : [];
+  if (permisos.length > 0) return permisos.includes(permiso);
+  const roleKey = role === 'enfermera' ? 'enfermero' : role;
+  const fallback = PERMISOS_POR_ROL[roleKey] || [];
+  return fallback.includes(permiso);
+};
+
+const RequirePermission = ({ permiso, children }) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!hasPermiso(user, permiso)) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+  return children;
+};
+
 function App() {
   const isAuthenticated = localStorage.getItem('token') !== null;
   
@@ -56,26 +93,93 @@ function App() {
           <Route path="/app" element={<RequireAuth><MainLayout /></RequireAuth>}>
             <Route index element={<Navigate to="/app/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="enfermeria" element={<EnfermeriaDashboard />} />
-            <Route path="medicos" element={<MedicosDashboard />} />
-            <Route path="residentes" element={<Residentes />} />
-            <Route path="residentes/:id" element={<DetalleResidente />} />
-            <Route path="signos-vitales" element={<SignosVitales />} />
-            <Route path="ordenes-medicas" element={<OrdenesMedicas />} />
-            <Route path="evoluciones" element={<Evoluciones />} />
+            <Route
+              path="enfermeria"
+              element={
+                <RequirePermission permiso="dashboard_enfermeria">
+                  <EnfermeriaDashboard />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="medicos"
+              element={
+                <RequirePermission permiso="dashboard_medico">
+                  <MedicosDashboard />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="residentes"
+              element={
+                <RequirePermission permiso="residentes">
+                  <Residentes />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="residentes/:id"
+              element={
+                <RequirePermission permiso="residentes">
+                  <DetalleResidente />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="signos-vitales"
+              element={
+                <RequirePermission permiso="signos_vitales">
+                  <SignosVitales />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="ordenes-medicas"
+              element={
+                <RequirePermission permiso="ordenes_medicas">
+                  <OrdenesMedicas />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="evoluciones"
+              element={
+                <RequirePermission permiso="evoluciones">
+                  <Evoluciones />
+                </RequirePermission>
+              }
+            />
             <Route path="donaciones" element={<Donaciones />} />
             <Route path="reportes" element={<Reportes />} />
-            <Route path="libro-diario" element={<LibroDiario />} />
-            <Route path="calendario-pagos" element={<CalendarioPagos />} />
-            <Route path="usuarios" element={<UsuariosAdmin />} />
+            <Route
+              path="libro-diario"
+              element={
+                <RequirePermission permiso="finanzas">
+                  <LibroDiario />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="calendario-pagos"
+              element={
+                <RequirePermission permiso="finanzas">
+                  <CalendarioPagos />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="usuarios"
+              element={
+                <RequirePermission permiso="usuarios">
+                  <UsuariosAdmin />
+                </RequirePermission>
+              }
+            />
             <Route path="diagnostico" element={
               <RequireAuth>
                 {(() => {
                   const user = JSON.parse(localStorage.getItem('user') || '{}');
-                  // Verificar si tiene rol admin directo o en roles adicionales
-                  const userRoles = user?.roles || [user?.role || user?.rol];
-                  const isAdmin = userRoles.includes('admin');
-                  return isAdmin ? <SystemDiagnostic /> : <Navigate to="/app/dashboard" replace />;
+                  return hasPermiso(user, 'diagnostico') ? <SystemDiagnostic /> : <Navigate to="/app/dashboard" replace />;
                 })()}
               </RequireAuth>
             } />

@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const transaccionesController = require('../controllers/transacciones.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, authorizeAccess } = require('../middlewares/auth.middleware');
 
-// Todas las rutas requieren autenticación y rol admin
-router.use(authenticate(['admin']));
+// Todas las rutas requieren autenticación y permiso de finanzas (admin tiene acceso total)
+router.use(authenticate());
+router.use(authorizeAccess({ roles: ['admin'], permisos: ['finanzas'] }));
 
 /**
  * @route   GET /api/transacciones

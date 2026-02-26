@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { normalizarPermisos, parsePermisos } = require('../config/permisos');
 
 /**
  * Middleware de autenticación
@@ -24,6 +25,13 @@ exports.authenticate = (roles = []) => {
         return res.status(403).json({ message: 'Permisos insuficientes para acceder a este recurso' });
       }
 
+      // Normalizar permisos si no vienen en el token
+      if (!decoded.permisos) {
+        decoded.permisos = normalizarPermisos([], decoded.rol);
+      } else {
+        decoded.permisos = parsePermisos(decoded.permisos);
+      }
+
       // Agregar la información del usuario decodificada a la petición
       req.user = decoded;
       next();
@@ -31,6 +39,46 @@ exports.authenticate = (roles = []) => {
       console.error('Error en autenticación:', err);
       return res.status(401).json({ message: 'Token inválido o expirado' });
     }
+  };
+};
+
+/**
+ * Middleware para autorizar por permisos (con fallback por rol)
+ * @param {Object} options - Opciones de autorizacion
+ * @param {Array} options.roles - Roles permitidos (fallback si no hay permisos)
+ * @param {Array} options.permisos - Permisos requeridos
+ * @returns {Function} - Middleware Express
+ */
+exports.authorizeAccess = ({ roles = [], permisos = [] } = {}) => {
+  return (req, res, next) => {
+    const user = req.user || {};
+    const userRole = user.rol || user.role;
+    const userPermisos = Array.isArray(user.permisos) ? user.permisos : [];
+
+    if (userRole === 'admin') {
+      return next();
+    }
+
+    if (userPermisos.length > 0) {
+      if (permisos.length === 0 || permisos.some((permiso) => userPermisos.includes(permiso))) {
+        return next();
+      }
+      return res.status(403).json({
+        message: 'Permisos insuficientes para acceder a este recurso',
+        requiredPermissions: permisos,
+        userPermissions: userPermisos
+      });
+    }
+
+    if (roles.length && roles.includes(userRole)) {
+      return next();
+    }
+
+    return res.status(403).json({
+      message: 'Permisos insuficientes para acceder a este recurso',
+      requiredRoles: roles,
+      userRole
+    });
   };
 };
 
@@ -83,13 +131,15 @@ exports.hasRole = (allowedRoles = []) => {
  * @returns {String} - Token JWT generado
  */
 exports.generateToken = (userData) => {
+  const permisos = normalizarPermisos(userData.permisos || [], userData.rol);
   const payload = {
     id: userData.id,
     username: userData.username,
     nombre: userData.nombre,
     apellido: userData.apellido,
     rol: userData.rol,
-    email: userData.email
+    email: userData.email,
+    permisos
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });

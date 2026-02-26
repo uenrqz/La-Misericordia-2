@@ -1,5 +1,10 @@
 const { pool } = require('../config/db');
 const bcrypt = require('bcrypt');
+const { normalizarPermisos, parsePermisos } = require('../config/permisos');
+
+const puedeGestionarUsuarios = (req) => {
+  return req.user?.rol === 'admin' || (Array.isArray(req.user?.permisos) && req.user.permisos.includes('usuarios'));
+};
 
 /**
  * Obtener lista pública de usuarios (solo información básica para login)
@@ -33,10 +38,15 @@ exports.getUsuariosPublicos = async (req, res) => {
 exports.getUsuarios = async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, nombre, apellido, email, rol, cambio_password_requerido, activo, created_at, updated_at FROM usuarios ORDER BY created_at DESC'
+      'SELECT id, username, nombre, apellido, email, rol, permisos, cambio_password_requerido, activo, created_at, updated_at FROM usuarios ORDER BY created_at DESC'
     );
-    
-    res.json(rows);
+
+    const usuarios = rows.map((usuario) => ({
+      ...usuario,
+      permisos: parsePermisos(usuario.permisos)
+    }));
+
+    res.json(usuarios);
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
     res.status(500).json({ 
@@ -56,12 +66,12 @@ exports.getUsuarioById = async (req, res) => {
     const { id } = req.params;
     
     // Verificar permisos (solo admin puede ver cualquier usuario, otros solo pueden verse a sí mismos)
-    if (req.user.rol !== 'admin' && req.user.id !== parseInt(id)) {
+    if (!puedeGestionarUsuarios(req) && req.user.id !== parseInt(id)) {
       return res.status(403).json({ message: 'No tiene permisos para ver este usuario' });
     }
     
     const { rows } = await pool.query(
-      'SELECT id, username, nombre, apellido, email, rol, activo, cambio_password_requerido, created_at, updated_at FROM usuarios WHERE id = $1',
+      'SELECT id, username, nombre, apellido, email, rol, permisos, activo, cambio_password_requerido, created_at, updated_at FROM usuarios WHERE id = $1',
       [id]
     );
     
@@ -69,7 +79,10 @@ exports.getUsuarioById = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
-    res.json(rows[0]);
+    res.json({
+      ...rows[0],
+      permisos: parsePermisos(rows[0].permisos)
+    });
   } catch (error) {
     console.error('Error al obtener usuario por ID:', error);
     res.status(500).json({ 
@@ -86,7 +99,7 @@ exports.getUsuarioById = async (req, res) => {
  */
 exports.createUsuario = async (req, res) => {
   try {
-    const { username, nombre, apellido, email, password, rol } = req.body;
+    const { username, nombre, apellido, email, password, rol, permisos } = req.body;
     
     console.log('Backend: Recibida solicitud para crear usuario:', {
       username,
@@ -126,6 +139,9 @@ exports.createUsuario = async (req, res) => {
     // Hash de la contraseña
     const hashedPassword = bcrypt.hashSync(password, 10);
     
+    const permisosFinal = normalizarPermisos(permisos, rol);
+    const permisosJson = JSON.stringify(permisosFinal);
+
     // Para el caso de creación de usuario administrador, verificar si el usuario actual es admin
     // y si se requiere la aprobación de otros administradores
     if (rol === 'admin') {
@@ -160,8 +176,8 @@ exports.createUsuario = async (req, res) => {
             // Intentar insertar con los campos cambio_password_requerido y activo
             try {
               const newUser = await pool.query(
-                'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol',
-                [username, nombre, apellido, email || null, hashedPassword, tempRol, true, true]
+                'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, permisos, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, username, nombre, apellido, email, rol, permisos',
+                [username, nombre, apellido, email || null, hashedPassword, tempRol, permisosJson, true, true]
               );
               
               // Crear la solicitud de administrador
@@ -180,8 +196,8 @@ exports.createUsuario = async (req, res) => {
               
               // Si falla, intentar sin esos campos
               const newUser = await pool.query(
-                'INSERT INTO usuarios (username, nombre, apellido, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, nombre, apellido, email, rol',
-                [username, nombre, apellido, email || null, hashedPassword, tempRol]
+                'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, permisos) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, nombre, apellido, email, rol, permisos',
+                [username, nombre, apellido, email || null, hashedPassword, tempRol, permisosJson]
               );
               
               // Crear la solicitud de administrador
@@ -213,8 +229,8 @@ exports.createUsuario = async (req, res) => {
     try {
       // Primero intentar con todos los campos
       const result = await pool.query(
-        'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, nombre, apellido, email, rol, cambio_password_requerido, activo',
-        [username, nombre, apellido, email || null, hashedPassword, rol, true, true]
+        'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, permisos, cambio_password_requerido, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, username, nombre, apellido, email, rol, permisos, cambio_password_requerido, activo',
+        [username, nombre, apellido, email || null, hashedPassword, rol, permisosJson, true, true]
       );
       
       console.log('Backend: Usuario creado exitosamente con todos los campos');
@@ -229,8 +245,8 @@ exports.createUsuario = async (req, res) => {
       try {
         // Si falla, intentar sin cambio_password_requerido ni activo
         const result = await pool.query(
-          'INSERT INTO usuarios (username, nombre, apellido, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, nombre, apellido, email, rol',
-          [username, nombre, apellido, email || null, hashedPassword, rol]
+          'INSERT INTO usuarios (username, nombre, apellido, email, password, rol, permisos) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, nombre, apellido, email, rol, permisos',
+          [username, nombre, apellido, email || null, hashedPassword, rol, permisosJson]
         );
         
         console.log('Backend: Usuario creado exitosamente con campos básicos');
@@ -261,21 +277,21 @@ exports.createUsuario = async (req, res) => {
 exports.updateUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, apellido, email, rol } = req.body;
+    const { nombre, apellido, email, rol, permisos } = req.body;
     
     // Verificar permisos (solo admin puede modificar a otros usuarios)
-    if (req.user.id !== parseInt(id) && req.user.rol !== 'admin') {
+    if (req.user.id !== parseInt(id) && !puedeGestionarUsuarios(req)) {
       return res.status(403).json({ message: 'No tienes permisos para modificar este usuario' });
     }
     
     // Si no es admin, no puede cambiar su rol
-    if (req.user.rol !== 'admin' && rol) {
+    if (!puedeGestionarUsuarios(req) && rol) {
       return res.status(403).json({ message: 'No tienes permisos para cambiar el rol' });
     }
     
     // Validar que el rol sea válido si se está cambiando
     if (rol) {
-      const rolesValidos = ['admin', 'enfermera', 'doctor', 'medico'];
+      const rolesValidos = ['admin', 'medico', 'doctor', 'enfermero', 'enfermera', 'cuidador', 'secretaria'];
       if (!rolesValidos.includes(rol)) {
         return res.status(400).json({ message: 'Rol no válido. Los roles permitidos son: admin, enfermera, doctor/medico' });
       }
@@ -314,9 +330,16 @@ exports.updateUsuario = async (req, res) => {
       paramIndex++;
     }
     
-    if (rol && req.user.rol === 'admin') {
+    if (rol && puedeGestionarUsuarios(req)) {
       updateFields.push(`rol = $${paramIndex}`);
       queryParams.push(rol);
+      paramIndex++;
+    }
+
+    if (puedeGestionarUsuarios(req) && permisos) {
+      const permisosFinal = normalizarPermisos(permisos, rol || usuarios[0].rol);
+      updateFields.push(`permisos = $${paramIndex}`);
+      queryParams.push(JSON.stringify(permisosFinal));
       paramIndex++;
     }
     
@@ -332,14 +355,17 @@ exports.updateUsuario = async (req, res) => {
       UPDATE usuarios 
       SET ${updateFields.join(', ')}, updated_at = NOW()
       WHERE id = $${paramIndex}
-      RETURNING id, username, nombre, apellido, email, rol, cambio_password_requerido, activo, created_at, updated_at
+      RETURNING id, username, nombre, apellido, email, rol, permisos, cambio_password_requerido, activo, created_at, updated_at
     `;
     
     const result = await pool.query(query, queryParams);
     
     res.json({
       message: 'Usuario actualizado exitosamente',
-      usuario: result.rows[0]
+      usuario: {
+        ...result.rows[0],
+        permisos: parsePermisos(result.rows[0].permisos)
+      }
     });
   } catch (error) {
     console.error('Error al actualizar usuario:', error);
@@ -360,7 +386,7 @@ exports.deleteUsuario = async (req, res) => {
     const { id } = req.params;
     
     // Solo los administradores pueden eliminar usuarios
-    if (req.user.rol !== 'admin') {
+    if (!puedeGestionarUsuarios(req)) {
       return res.status(403).json({ message: 'No tienes permisos para eliminar usuarios' });
     }
     
@@ -406,7 +432,7 @@ exports.deleteUsuario = async (req, res) => {
 exports.getSolicitudesAdmin = async (req, res) => {
   try {
     // Solo administradores pueden ver solicitudes
-    if (req.user.rol !== 'admin') {
+    if (!puedeGestionarUsuarios(req)) {
       return res.status(403).json({ message: 'No tiene permisos para ver solicitudes de administrador' });
     }
     
@@ -457,7 +483,7 @@ exports.responderSolicitudAdmin = async (req, res) => {
     const { aprobado, comentario } = req.body;
     
     // Solo administradores pueden aprobar o rechazar
-    if (req.user.rol !== 'admin') {
+    if (!puedeGestionarUsuarios(req)) {
       return res.status(403).json({ message: 'No tiene permisos para responder a solicitudes de administrador' });
     }
     
@@ -527,7 +553,7 @@ exports.cambiarPassword = async (req, res) => {
     const { passwordActual, passwordNueva, passwordConfirmacion } = req.body;
     
     // Verificar que el usuario tenga permisos
-    if (req.user.id !== parseInt(id) && req.user.rol !== 'admin') {
+    if (req.user.id !== parseInt(id) && !puedeGestionarUsuarios(req)) {
       return res.status(403).json({ message: 'No tienes permisos para cambiar esta contraseña' });
     }
     
@@ -591,7 +617,7 @@ exports.toggleEstadoUsuario = async (req, res) => {
     const { activo } = req.body;
     
     // Solo admin puede cambiar el estado
-    if (req.user.rol !== 'admin') {
+    if (!puedeGestionarUsuarios(req)) {
       return res.status(403).json({ message: 'No tienes permisos para cambiar el estado del usuario' });
     }
     

@@ -123,12 +123,47 @@ const MainLayout = () => {
   const renderMenuItems = () => {
     const user = currentUser || authService.getCurrentUser();
     const role = user?.role || user?.rol || 'admin';
+    const permisos = Array.isArray(user?.permisos) ? user.permisos : [];
+
+    const permisosPorRol = {
+      admin: [
+        'dashboard_admin',
+        'dashboard_medico',
+        'dashboard_enfermeria',
+        'residentes',
+        'signos_vitales',
+        'ordenes_medicas',
+        'evoluciones',
+        'finanzas',
+        'usuarios',
+        'diagnostico'
+      ],
+      medico: ['dashboard_medico', 'residentes', 'ordenes_medicas', 'evoluciones'],
+      enfermero: ['dashboard_enfermeria', 'residentes', 'signos_vitales', 'evoluciones'],
+      cuidador: ['residentes'],
+      secretaria: ['residentes']
+    };
+
+    const hasPermiso = (permiso) => {
+      if (role === 'admin') return true;
+      if (permisos.length > 0) return permisos.includes(permiso);
+      const roleKey = role === 'enfermera' ? 'enfermero' : role;
+      const fallback = permisosPorRol[roleKey] || [];
+      return fallback.includes(permiso);
+    };
+
+    const getDashboardPath = () => {
+      if (role === 'admin') return '/app/dashboard';
+      if (hasPermiso('dashboard_medico')) return '/app/medicos';
+      if (hasPermiso('dashboard_enfermeria')) return '/app/enfermeria';
+      return '/app/dashboard';
+    };
   
   return (
       <ul className="space-y-2 font-medium">
         <li>
           <Link
-            to={role === 'medico' ? '/app/medicos' : role === 'enfermera' ? '/app/enfermeria' : '/app/dashboard'}
+            to={getDashboardPath()}
             className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${
               location.pathname === '/app/dashboard' || 
               location.pathname === '/app/medicos' || 
@@ -141,17 +176,19 @@ const MainLayout = () => {
             <span className="ms-3">Dashboard</span>
           </Link>
         </li>
-        <li>
-          <Link
-            to="/app/residentes"
-            className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${location.pathname.includes('/app/residentes') ? 'bg-primary-100 text-primary-600' : ''}`}
-          >
-            <i className="fas fa-users w-5 h-5 text-dark-300 group-hover:text-primary-600"></i>
-            <span className="ms-3">Pacientes</span>
-          </Link>
-        </li>
+        {hasPermiso('residentes') && (
+          <li>
+            <Link
+              to="/app/residentes"
+              className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${location.pathname.includes('/app/residentes') ? 'bg-primary-100 text-primary-600' : ''}`}
+            >
+              <i className="fas fa-users w-5 h-5 text-dark-300 group-hover:text-primary-600"></i>
+              <span className="ms-3">Pacientes</span>
+            </Link>
+          </li>
+        )}
         {/* Signos Vitales - Visible para enfermeras y admin */}
-        {(role === 'enfermera' || role === 'admin') && (
+        {hasPermiso('signos_vitales') && (
           <li>
             <Link
               to="/app/signos-vitales"
@@ -163,7 +200,7 @@ const MainLayout = () => {
           </li>
         )}
         {/* Órdenes Médicas - Visible para médicos y admin */}
-        {(role === 'medico' || role === 'admin') && (
+        {hasPermiso('ordenes_medicas') && (
           <li>
             <Link
               to="/app/ordenes-medicas"
@@ -175,15 +212,17 @@ const MainLayout = () => {
           </li>
         )}
         {/* Evoluciones - Visible para médicos, enfermeras y admin */}
-        <li>
-          <Link
-            to="/app/evoluciones"
-            className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${location.pathname === '/app/evoluciones' ? 'bg-primary-100 text-primary-600' : ''}`}
-          >
-            <i className="fas fa-file-medical w-5 h-5 text-dark-300 group-hover:text-primary-600"></i>
-            <span className="ms-3">Evoluciones</span>
-          </Link>
-        </li>
+        {hasPermiso('evoluciones') && (
+          <li>
+            <Link
+              to="/app/evoluciones"
+              className={`flex items-center p-2 text-dark-500 rounded-lg hover:bg-primary-50 group ${location.pathname === '/app/evoluciones' ? 'bg-primary-100 text-primary-600' : ''}`}
+            >
+              <i className="fas fa-file-medical w-5 h-5 text-dark-300 group-hover:text-primary-600"></i>
+              <span className="ms-3">Evoluciones</span>
+            </Link>
+          </li>
+        )}
         {/* Donaciones - Solo visible para admin */}
         {role === 'admin' && (
           <li>
@@ -197,7 +236,7 @@ const MainLayout = () => {
           </li>
         )}
         {/* Libro Diario - Solo visible para admin */}
-        {role === 'admin' && (
+        {hasPermiso('finanzas') && (
           <li>
             <Link
               to="/app/libro-diario"
@@ -209,7 +248,7 @@ const MainLayout = () => {
           </li>
         )}
         {/* Calendario de Pagos - Solo visible para admin */}
-        {role === 'admin' && (
+        {hasPermiso('finanzas') && (
           <li>
             <Link
               to="/app/calendario-pagos"
@@ -234,7 +273,7 @@ const MainLayout = () => {
         )}
         
         {/* Administración de Usuarios - Solo para administradores */}
-        {role === 'admin' && (
+        {hasPermiso('usuarios') && (
           <li>
             <Link
               to="/app/usuarios"
@@ -247,7 +286,7 @@ const MainLayout = () => {
         )}
 
         {/* Diagnóstico del Sistema - Solo para administradores */}
-        {role === 'admin' && (
+        {hasPermiso('diagnostico') && (
           <li>
             <Link
               to="/app/diagnostico"

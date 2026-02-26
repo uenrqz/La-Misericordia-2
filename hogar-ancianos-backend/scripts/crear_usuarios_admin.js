@@ -61,6 +61,25 @@ async function ensureRolesAdicionalesColumn() {
 }
 
 /**
+ * Asegura que la columna permisos exista en la tabla usuarios
+ */
+async function ensurePermisosColumn() {
+  if (!pool) {
+    initPool();
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query(
+      "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS permisos TEXT DEFAULT '[]'"
+    );
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Función principal para crear/actualizar usuarios administradores
  * @param {boolean} silentMode Si es true, reduce los mensajes en consola
  */
@@ -266,5 +285,6 @@ if (require.main === module) {
 module.exports = {
   crearUsuariosAdmin,
   initPool,
-  ensureRolesAdicionalesColumn
+  ensureRolesAdicionalesColumn,
+  ensurePermisosColumn
 };
