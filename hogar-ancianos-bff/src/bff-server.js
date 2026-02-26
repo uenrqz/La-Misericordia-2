@@ -96,6 +96,8 @@ app.use('/api/bff/auth', require('./routes/auth.routes'));
 app.use('/api/bff/dashboard', require('./routes/dashboard.routes'));
 app.use('/api/bff/residentes', require('./routes/residentes.routes'));
 app.use('/api/bff/usuarios', require('./routes/usuarios.routes'));
+app.use('/api/bff/transacciones', require('./routes/transacciones.routes'));
+app.use('/api/bff/pagos-programados', require('./routes/pagos.routes'));
 // Rutas de diagnóstico eliminadas para entorno de producción
 
 // ELIMINADO: Manejador de unhandledRejection movido fuera del middleware

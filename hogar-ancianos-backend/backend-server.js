@@ -39,6 +39,10 @@ app.use('/api/residentes', require('./src/routes/ordenes-medicas.routes'));
 app.use('/api/donaciones', require('./src/routes/donaciones.routes'));
 app.use('/api/finanzas', require('./src/routes/finanzas.routes'));
 
+// Rutas de Libro Diario Financiero
+app.use('/api/transacciones', require('./src/routes/transacciones.routes'));
+app.use('/api/pagos-programados', require('./src/routes/pagos.routes'));
+
 // Verificar conexión a PostgreSQL
 async function verificarConexionDB() {
   try {
