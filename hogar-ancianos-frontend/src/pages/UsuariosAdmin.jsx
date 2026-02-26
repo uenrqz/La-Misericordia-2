@@ -391,7 +391,7 @@ const UsuariosAdmin = () => {
       case 'crear':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Crear Nuevo Usuario</h2>
+            <h2 className="text-2xl font-bold">Crear Nuevo Usuario</h2>
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Usuario</label>
@@ -400,7 +400,7 @@ const UsuariosAdmin = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Nombre de usuario"
               />
             </div>
@@ -413,7 +413,7 @@ const UsuariosAdmin = () => {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Nombre"
                 />
               </div>
@@ -425,7 +425,7 @@ const UsuariosAdmin = () => {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Apellido"
                 />
               </div>
@@ -438,7 +438,7 @@ const UsuariosAdmin = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Correo electrónico"
               />
             </div>              <div className="mb-4">
@@ -447,7 +447,7 @@ const UsuariosAdmin = () => {
                 name="rol"
                 value={formData.rol}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="enfermero">Enfermero</option>
                 <option value="cuidador">Cuidador</option>
@@ -553,7 +553,7 @@ const UsuariosAdmin = () => {
       case 'editar':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Editar Usuario</h2>
+            <h2 className="text-2xl font-bold">Editar Usuario</h2>
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Usuario</label>
@@ -574,7 +574,7 @@ const UsuariosAdmin = () => {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
               
@@ -585,7 +585,7 @@ const UsuariosAdmin = () => {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
             </div>
@@ -597,7 +597,7 @@ const UsuariosAdmin = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
             </div>              <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Rol</label>
@@ -605,7 +605,7 @@ const UsuariosAdmin = () => {
                 name="rol"
                 value={formData.rol}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 disabled={!usuarioEsAdmin()}
               >
                 <option value="enfermero">Enfermero</option>
@@ -638,7 +638,7 @@ const UsuariosAdmin = () => {
               </div>
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {PERMISOS_DISPONIBLES.map((permiso) => (
-                  <label key={permiso.id} className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+                  <label key={permiso.id} className="flex items-center gap-2 text-sm text-gray-700">
                     <input
                       type="checkbox"
                       checked={Array.isArray(formData.permisos) && formData.permisos.includes(permiso.id)}
@@ -684,7 +684,7 @@ const UsuariosAdmin = () => {
       case 'eliminar':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Confirmar Eliminación</h2>
+            <h2 className="text-2xl font-bold">Confirmar Eliminación</h2>
             
             <p className="text-gray-600">
               ¿Está seguro que desea eliminar al usuario <span className="font-bold">{usuarioSeleccionado?.nombre} {usuarioSeleccionado?.apellido}</span>?
@@ -718,7 +718,7 @@ const UsuariosAdmin = () => {
       case 'password':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Cambiar Contraseña</h2>
+            <h2 className="text-2xl font-bold">Cambiar Contraseña</h2>
             
             {usuarioEsAdmin() && usuarioSeleccionado?.id !== JSON.parse(localStorage.getItem('user')).id ? (
               <p className="text-sm text-blue-600">
@@ -732,13 +732,13 @@ const UsuariosAdmin = () => {
                   name="passwordActual"
                   value={formData.passwordActual}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="********"
                 />
               </div>
             )}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Nueva Contraseña</label>
                 <input
@@ -746,7 +746,7 @@ const UsuariosAdmin = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="********"
                 />
               </div>
@@ -758,7 +758,7 @@ const UsuariosAdmin = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="********"
                 />
               </div>
@@ -794,7 +794,7 @@ const UsuariosAdmin = () => {
       case 'solicitudes':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Solicitudes Pendientes</h2>
+            <h2 className="text-2xl font-bold">Solicitudes Pendientes</h2>
             
             {solicitudes.length === 0 ? (
               <p className="text-gray-600">No hay solicitudes pendientes</p>
@@ -891,28 +891,28 @@ const UsuariosAdmin = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th className="hidden lg:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-                <th className="hidden sm:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th className="hidden lg:table-cell px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                <th className="hidden sm:table-cell px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {usuarios.map((usuario) => (
                 <tr key={usuario.id} className={!usuario.activo ? 'bg-gray-100' : ''}>
                   <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-xs font-bold">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-sm font-bold">
                         {usuario.nombre.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs lg:text-sm font-medium text-gray-900 truncate">
+                        <div className="text-sm lg:text-base font-medium text-gray-900 truncate">
                           {usuario.username}
                         </div>
                         {usuario.cambio_password_requerido && (
-                          <span className="px-1 inline-flex text-xs leading-4 font-semibold rounded bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded bg-yellow-100 text-yellow-800 whitespace-nowrap">
                             Cambio pwd
                           </span>
                         )}
@@ -920,13 +920,13 @@ const UsuariosAdmin = () => {
                     </div>
                   </td>
                   <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <div className="text-xs lg:text-sm text-gray-900 truncate">{usuario.nombre} {usuario.apellido}</div>
+                    <div className="text-sm lg:text-base text-gray-900 truncate">{usuario.nombre} {usuario.apellido}</div>
                   </td>
                   <td className="hidden lg:table-cell px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <div className="text-xs lg:text-sm text-gray-900 truncate">{usuario.email || '-'}</div>
+                    <div className="text-sm lg:text-base text-gray-900 truncate">{usuario.email || '-'}</div>
                   </td>
                   <td className="px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    <span className={`px-2 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
                       ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
                         usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
                         usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
@@ -940,42 +940,42 @@ const UsuariosAdmin = () => {
                     </span>
                   </td>
                   <td className="hidden sm:table-cell px-4 lg:px-6 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    <span className={`px-2 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
                       ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {usuario.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-right">
-                    <div className="flex justify-end gap-1 lg:gap-2">
+                    <div className="flex justify-end gap-2">
                       <button
                         onClick={() => abrirModalEditar(usuario)}
-                        className="p-1.5 lg:p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
+                        className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
                         title="Editar usuario"
                       >
-                        <FaEdit size={14} />
+                        <FaEdit size={16} />
                       </button>
                       <button
                         onClick={() => abrirModalPassword(usuario)}
-                        className="p-1.5 lg:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
+                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
                         title="Cambiar contraseña"
                       >
-                        <FaLock size={14} />
+                        <FaLock size={16} />
                       </button>
                       {usuarioEsAdmin() && usuario.id !== JSON.parse(localStorage.getItem('user')).id && (
                         <>
                           <button
                             onClick={() => toggleEstadoUsuario(usuario)}
-                            className={`p-1.5 lg:p-2 rounded ${usuario.activo ? 'text-red-600 hover:text-red-900 hover:bg-red-50' : 'text-green-600 hover:text-green-900 hover:bg-green-50'}`}
+                            className={`p-2 rounded ${usuario.activo ? 'text-red-600 hover:text-red-900 hover:bg-red-50' : 'text-green-600 hover:text-green-900 hover:bg-green-50'}`}
                             title={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
                           >
-                            {usuario.activo ? <FaTimes size={14} /> : <FaCheck size={14} />}
+                            {usuario.activo ? <FaTimes size={16} /> : <FaCheck size={16} />}
                           </button>
                           <button
                             onClick={() => abrirModalEliminar(usuario)}
-                            className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
                             title="Eliminar usuario"
                           >
-                            <FaTrash size={14} />
+                            <FaTrash size={16} />
                           </button>
                         </>
                       )}
@@ -988,20 +988,20 @@ const UsuariosAdmin = () => {
         </div>
 
         {/* Vista Mobile - Tarjetas */}
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-4">
           {usuarios.map((usuario) => (
-            <div key={usuario.id} className={`border rounded-lg p-3 ${!usuario.activo ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-xs font-bold">
+            <div key={usuario.id} className={`border rounded-lg p-4 ${!usuario.activo ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-primary-100 text-primary-800 text-sm font-bold">
                     {usuario.nombre.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{usuario.username}</p>
-                    <p className="text-xs text-gray-600 truncate">{usuario.nombre} {usuario.apellido}</p>
+                    <p className="text-base font-medium text-gray-900 truncate">{usuario.username}</p>
+                    <p className="text-sm text-gray-600 truncate">{usuario.nombre} {usuario.apellido}</p>
                   </div>
                 </div>
-                <span className={`flex-shrink-0 px-2 py-1 text-xs font-semibold rounded-full
+                <span className={`flex-shrink-0 px-2 py-1 text-sm font-semibold rounded-full
                   ${usuario.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
                     usuario.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
                     usuario.rol === 'enfermero' ? 'bg-green-100 text-green-800' : 
@@ -1016,16 +1016,16 @@ const UsuariosAdmin = () => {
               </div>
               
               {usuario.email && (
-                <p className="text-xs text-gray-600 mb-2 truncate">Email: {usuario.email}</p>
+                <p className="text-sm text-gray-600 mb-2 truncate">Email: {usuario.email}</p>
               )}
               
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-xs font-semibold rounded-full px-2 py-0.5
+                <span className={`text-sm font-semibold rounded-full px-2 py-1
                   ${usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                   {usuario.activo ? 'Activo' : 'Inactivo'}
                 </span>
                 {usuario.cambio_password_requerido && (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 rounded-full px-2 py-0.5">
+                  <span className="text-xs bg-yellow-100 text-yellow-800 rounded-full px-2 py-1">
                     Cambio pwd
                   </span>
                 )}
@@ -1034,13 +1034,13 @@ const UsuariosAdmin = () => {
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => abrirModalEditar(usuario)}
-                  className="flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium text-primary-600 border border-primary-600 rounded hover:bg-primary-50"
+                  className="flex-1 min-w-[70px] px-2 py-2 text-sm font-medium text-primary-600 border border-primary-600 rounded hover:bg-primary-50"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => abrirModalPassword(usuario)}
-                  className="flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
+                  className="flex-1 min-w-[70px] px-2 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
                 >
                   Pwd
                 </button>
@@ -1048,13 +1048,13 @@ const UsuariosAdmin = () => {
                   <>
                     <button
                       onClick={() => toggleEstadoUsuario(usuario)}
-                      className={`flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium rounded border ${usuario.activo ? 'text-red-600 border-red-600 hover:bg-red-50' : 'text-green-600 border-green-600 hover:bg-green-50'}`}
+                      className={`flex-1 min-w-[70px] px-2 py-2 text-sm font-medium rounded border ${usuario.activo ? 'text-red-600 border-red-600 hover:bg-red-50' : 'text-green-600 border-green-600 hover:bg-green-50'}`}
                     >
                       {usuario.activo ? 'Desact.' : 'Act.'}
                     </button>
                     <button
                       onClick={() => abrirModalEliminar(usuario)}
-                      className="flex-1 min-w-[60px] px-2 py-1.5 text-xs font-medium text-red-600 border border-red-600 rounded hover:bg-red-50"
+                      className="flex-1 min-w-[70px] px-2 py-2 text-sm font-medium text-red-600 border border-red-600 rounded hover:bg-red-50"
                     >
                       Elim.
                     </button>
@@ -1071,7 +1071,7 @@ const UsuariosAdmin = () => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center">
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 flex items-center">
           <FaUsers className="mr-2" /> Usuarios
         </h1>
         
@@ -1079,11 +1079,11 @@ const UsuariosAdmin = () => {
           {usuarioEsAdmin() && (
             <button
               onClick={abrirModalSolicitudes}
-              className="flex items-center justify-center px-3 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+              className="flex items-center justify-center px-4 py-2.5 text-base bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-medium"
             >
-              <FaUserShield className="mr-1" size={16} /> Solicitudes
+              <FaUserShield className="mr-1" size={18} /> Solicitudes
               {solicitudes.length > 0 && (
-                <span className="ml-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="ml-1 bg-red-500 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center">
                   {solicitudes.length}
                 </span>
               )}
@@ -1092,9 +1092,9 @@ const UsuariosAdmin = () => {
           
           <button
             onClick={abrirModalCrear}
-            className="flex items-center justify-center px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition-all"
+            className="flex items-center justify-center px-4 py-2.5 text-base bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition-all font-medium"
           >
-            <FaUserPlus className="mr-2" size={16} /> Agregar
+            <FaUserPlus className="mr-2" size={18} /> Agregar
           </button>
         </div>
       </div>
