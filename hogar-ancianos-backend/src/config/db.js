@@ -18,7 +18,14 @@ if (isDevelopment) {
   };
 } else {
   // Configuración para producción (Render)
-  const connectionString = process.env.DATABASE_URL;
+  let connectionString = process.env.DATABASE_URL;
+  if (connectionString) {
+    const parsedDbUrl = new URL(connectionString);
+    if (parsedDbUrl.hostname.startsWith('dpg-') && !parsedDbUrl.hostname.includes('.')) {
+      parsedDbUrl.hostname = `${parsedDbUrl.hostname}.oregon-postgres.render.com`;
+    }
+    connectionString = parsedDbUrl.toString();
+  }
   const isInternalRenderHost = connectionString
     ? !new URL(connectionString).hostname.includes('.')
     : false;
