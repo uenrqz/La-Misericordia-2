@@ -22,10 +22,16 @@ if (isDevelopment) {
 } else {
   // Configuración para producción (Render)
   try {
-    const dbUrl = process.env.DATABASE_URL;
+    let dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
       throw new Error('DATABASE_URL no está definida');
     }
+
+    const parsedDbUrl = new URL(dbUrl);
+    if (parsedDbUrl.hostname.startsWith('dpg-') && !parsedDbUrl.hostname.includes('.')) {
+      parsedDbUrl.hostname = `${parsedDbUrl.hostname}.oregon-postgres.render.com`;
+    }
+    dbUrl = parsedDbUrl.toString();
 
     sequelize = new Sequelize(dbUrl, {
       dialect: 'postgres',

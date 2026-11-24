@@ -22,7 +22,7 @@ const httpsAgent = new https.Agent({
 
 // Configuración de Axios para el backend
 const apiClient = axios.create({
-  baseURL: process.env.API_URL || 'http://localhost:3000',
+  baseURL: process.env.API_URL || process.env.BACKEND_URL || 'https://hogar-ancianos-backend.onrender.com',
   timeout: parseInt(process.env.API_TIMEOUT) || 30000, // 30 segundos (Render puede tardar 30s en despertar)
   headers: {
     'Content-Type': 'application/json',

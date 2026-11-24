@@ -18,8 +18,17 @@ if (isDevelopment) {
   };
 } else {
   // Configuración para producción (Render)
+  let connectionString = process.env.DATABASE_URL;
+  if (connectionString) {
+    const parsedDbUrl = new URL(connectionString);
+    if (parsedDbUrl.hostname.startsWith('dpg-') && !parsedDbUrl.hostname.includes('.')) {
+      parsedDbUrl.hostname = `${parsedDbUrl.hostname}.oregon-postgres.render.com`;
+    }
+    connectionString = parsedDbUrl.toString();
+  }
+
   poolConfig = {
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     ssl: {
       require: true,
       rejectUnauthorized: false // CRUCIAL para Render

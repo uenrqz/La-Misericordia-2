@@ -105,7 +105,7 @@ app.use('/api/bff/pagos-programados', require('./routes/pagos.routes'));
 
 // Proxy para APIs del backend no cubiertas por el BFF
 const apiProxy = createProxyMiddleware({
-  target: process.env.API_URL || 'http://192.168.0.10:3000',
+  target: process.env.API_URL || process.env.BACKEND_URL || 'https://hogar-ancianos-backend.onrender.com',
   changeOrigin: true,
   pathRewrite: {
     '^/api': '/api', // no cambiar la ruta

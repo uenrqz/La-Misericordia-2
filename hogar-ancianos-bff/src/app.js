@@ -87,7 +87,7 @@ app.get('/api/bff/status', async (req, res) => {
   
   // Verificar conexión con el backend
   const backendStatus = { status: 'UNKNOWN', message: 'No verificado' };
-  const backendUrl = process.env.API_URL || 'http://localhost:3000';
+  const backendUrl = process.env.API_URL || process.env.BACKEND_URL || 'https://hogar-ancianos-backend.onrender.com';
   
   try {
     const axios = require('axios');
@@ -142,7 +142,7 @@ app.use((req, res, next) => {
 
 // Proxy para APIs del backend no cubiertas por el BFF
 const apiProxy = createProxyMiddleware({
-  target: process.env.API_URL || 'http://localhost:3000',
+  target: process.env.API_URL || process.env.BACKEND_URL || 'https://hogar-ancianos-backend.onrender.com',
   changeOrigin: true,
   pathRewrite: {
     '^/api': '/api', // no cambiar la ruta
