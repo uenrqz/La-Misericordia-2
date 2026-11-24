@@ -22,25 +22,24 @@ if (isDevelopment) {
 } else {
   // Configuración para producción (Render)
   try {
-    let dbUrl = process.env.DATABASE_URL;
+    const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
       throw new Error('DATABASE_URL no está definida');
     }
 
-    const parsedDbUrl = new URL(dbUrl);
-    if (parsedDbUrl.hostname.startsWith('dpg-') && !parsedDbUrl.hostname.includes('.')) {
-      parsedDbUrl.hostname = `${parsedDbUrl.hostname}.oregon-postgres.render.com`;
-    }
-    dbUrl = parsedDbUrl.toString();
+    const isInternalRenderHost = !new URL(dbUrl).hostname.includes('.');
+    const dialectOptions = isInternalRenderHost
+      ? {}
+      : {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        };
 
     sequelize = new Sequelize(dbUrl, {
       dialect: 'postgres',
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      },
+      dialectOptions,
       logging: false,
     });
   } catch (error) {
