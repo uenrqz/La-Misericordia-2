@@ -28,12 +28,11 @@ if (isDevelopment) {
     }
 
     const parsedDbUrl = new URL(dbUrl);
+    const isInternalRenderHost = !parsedDbUrl.hostname.includes('.');
     if (parsedDbUrl.hostname.startsWith('dpg-') && !parsedDbUrl.hostname.includes('.')) {
       parsedDbUrl.hostname = `${parsedDbUrl.hostname}.oregon-postgres.render.com`;
     }
     dbUrl = parsedDbUrl.toString();
-
-    const isInternalRenderHost = !parsedDbUrl.hostname.includes('.');
     const dialectOptions = isInternalRenderHost
       ? {}
       : {
