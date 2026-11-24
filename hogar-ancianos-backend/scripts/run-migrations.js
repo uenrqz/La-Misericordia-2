@@ -8,13 +8,19 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'hogar_user',
-  password: process.env.DB_PASSWORD || 'securepass',
-  database: process.env.DB_NAME || 'hogar_db'
-});
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { require: true, rejectUnauthorized: false },
+      connectionTimeoutMillis: 30000
+    })
+  : new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER || 'hogar_user',
+      password: process.env.DB_PASSWORD || 'securepass',
+      database: process.env.DB_NAME || 'hogar_db'
+    });
 
 /**
  * Ejecuta un script SQL desde un archivo

@@ -12,7 +12,8 @@ const usuariosService = {
   // Cache de usuarios públicos para reducir llamadas al servidor
   _cachedPublicUsers: null,
   _cacheTimestamp: 0,
-  _cacheTTL: 60000, // 1 minuto de tiempo de vida para la caché
+  _cacheTTL: 300000,
+  _publicUsersRequest: null,
   
     getUsuariosPublicos: async () => {
     try {
@@ -23,6 +24,10 @@ const usuariosService = {
         console.log('🔄 Usando caché de usuarios para el login');
         return usuariosService._cachedPublicUsers;
       }
+
+      if (usuariosService._publicUsersRequest) {
+        return usuariosService._publicUsersRequest;
+      }
       
       const url = `${getBffApiBaseUrl()}/usuarios/public`;
       
@@ -31,29 +36,36 @@ const usuariosService = {
         console.log(`📞 Llamando a usuarios públicos: ${url}`);
       }
       
-      const fetchResponse = await fetch(url, {
+      usuariosService._publicUsersRequest = (async () => {
+        const fetchResponse = await fetch(url, {
         // Optimizar la petición
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         cache: 'default'
-      });
+        });
       
-      if (!fetchResponse.ok) {
-        throw new Error(`Error de red: ${fetchResponse.status}`);
-      }
+        if (!fetchResponse.ok) {
+          throw new Error(`Error de red: ${fetchResponse.status}`);
+        }
       
-      const data = await fetchResponse.json();
+        const data = await fetchResponse.json();
       
-      // Guardar en caché
-      usuariosService._cachedPublicUsers = data;
-      usuariosService._cacheTimestamp = now;
+        usuariosService._cachedPublicUsers = data;
+        usuariosService._cacheTimestamp = Date.now();
       
       // Desactivar logs en producción
       if (process.env.NODE_ENV !== 'production') {
         console.log('✅ Usuarios cargados:', data.length);
       }
       
-      return data;
+        return data;
+      })();
+
+      try {
+        return await usuariosService._publicUsersRequest;
+      } finally {
+        usuariosService._publicUsersRequest = null;
+      }
     } catch (error) {
       // Log mínimo en producción para reducir overhead
       console.error('❌ Error al obtener usuarios:', error.message);
