@@ -49,9 +49,12 @@ El sistema está preparado para desplegarse en Railway. Solo necesitas:
 
 1. Crear un proyecto en Railway con PostgreSQL
 2. Conectar tu repositorio de GitHub
-3. Configurar la variable de entorno `NODE_ENV=production`
+3. Configurar `NODE_ENV=production`
+4. Configurar `DATABASE_URL` con la URL completa de PostgreSQL
 
-Railway detectará automáticamente las variables de entorno de la base de datos PostgreSQL.
+Railway puede proporcionar `DATABASE_URL` automáticamente. En Render, usa la
+**External Database URL** en el servicio del backend. `DATABASE_URL` debe incluir
+usuario, contraseña, host, puerto y nombre de la base de datos.
 
 ## Instalación
 

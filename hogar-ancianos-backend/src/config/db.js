@@ -2,7 +2,8 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Configuración condicional para desarrollo/producción
-const isDevelopment = process.env.NODE_ENV === 'development';
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const isDevelopment = process.env.NODE_ENV === 'development' && !hasDatabaseUrl;
 
 let poolConfig;
 
