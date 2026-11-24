@@ -42,6 +42,10 @@ if (process.env.NODE_ENV !== 'production') {
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
+
+      if (/^https:\/\/lamisericordia[a-z0-9-]*\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
       
       // Registrar origen bloqueado para diagnóstico
       console.warn(`[BFF] Origen bloqueado por CORS: ${origin}`);

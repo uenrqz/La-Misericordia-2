@@ -11,6 +11,7 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
   ? [
       process.env.FRONTEND_URL || 'https://lamisericordia2.com',
       process.env.FRONTEND_DOMAIN || 'https://app.lamisericordia2.com',
+      'https://lamisericordiaapp.vercel.app',
       'http://localhost:5174', // Añadido para pruebas locales en producción
       'http://127.0.0.1:5174',
       'http://192.168.0.10:5174' // IP local para acceso desde otros dispositivos
@@ -37,6 +38,10 @@ if (process.env.NODE_ENV !== 'production') {
       
       // Permitir orígenes específicos
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      if (/^https:\/\/lamisericordia[a-z0-9-]*\.vercel\.app$/.test(origin)) {
         return callback(null, true);
       }
       

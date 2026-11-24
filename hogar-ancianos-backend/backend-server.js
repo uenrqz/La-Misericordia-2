@@ -6,8 +6,22 @@ require('dotenv').config();
 const app = express();
 
 // Configuración de CORS segura
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://lamisericordiaapp.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173'
+].filter(Boolean);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin ||
+        allowedOrigins.includes(origin) ||
+        /^https:\/\/lamisericordia[a-z0-9-]*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('Origen no permitido por política CORS'), false);
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
