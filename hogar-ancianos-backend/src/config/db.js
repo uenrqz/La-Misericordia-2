@@ -18,25 +18,14 @@ if (isDevelopment) {
   };
 } else {
   // Configuración para producción (Render)
-  let connectionString = process.env.DATABASE_URL;
-  let isInternalRenderHost = false;
-  if (connectionString) {
-    const parsedDbUrl = new URL(connectionString);
-    isInternalRenderHost = !parsedDbUrl.hostname.includes('.');
-    if (parsedDbUrl.hostname.startsWith('dpg-') && !parsedDbUrl.hostname.includes('.')) {
-      parsedDbUrl.hostname = `${parsedDbUrl.hostname}.oregon-postgres.render.com`;
-    }
-    connectionString = parsedDbUrl.toString();
-  }
+  const connectionString = process.env.DATABASE_URL;
 
   poolConfig = {
     connectionString,
-    ssl: isInternalRenderHost
-      ? false
-      : {
-          require: true,
-          rejectUnauthorized: false
-        },
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    },
     connectionTimeoutMillis: 30000
   };
 }
